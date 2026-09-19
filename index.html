@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Palme d'Or - SAEIV</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text); min-height: 100vh; padding: 15px; }
+    
+    .container { max-width: 500px; margin: 0 auto; }
+    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
+    
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .logo-img { height: 40px; max-width: 140px; object-fit: contain; }
+    .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+    
+    input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    
+    .badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 16px; min-width: 45px; text-align: center; }
+    .hidden { display: none !important; }
+    .alert-box { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; }
+    .profile-card { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ECRAN DE CONNEXION -->
+  <div id="login-screen" class="card" style="text-align: center; margin-top: 40px;">
+    <h2 style="color: var(--primary); margin-bottom: 5px;">Palme d'Or</h2>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs</p>
+    
+    <input type="password" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
+    <button id="login-btn">Connexion</button>
+    <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
+  </div>
+
+  <!-- INTERFACE PRINCIPALE -->
+  <div id="app-screen" class="hidden">
+    
+    <div class="card header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img id="app-logo" src="" alt="Logo Palme d'Or" class="logo-img">
+      </div>
+      <div>
+        <button id="logout-btn" style="padding: 4px 8px; font-size: 11px; background: #64748b;">Déconnexion</button>
+      </div>
+    </div>
+
+    <div id="alert-display" class="alert-box hidden">
+      <strong>Alerte Trafic :</strong> <span id="alert-text"></span>
+    </div>
+
+    <!-- VUE CONDUCTEUR (Romain) -->
+    <div id="driver-view" class="card hidden">
+      <div class="profile-card">
+        <img id="driver-avatar" src="https://via.placeholder.com/150?text=Romain" alt="Romain DESVIGNES" class="avatar">
+        <div>
+          <p style="font-size: 11px; color: #64748b; font-weight: bold;">FEUILLE DE ROUTE CONDUCTEUR</p>
+          <p id="driver-user-name" style="font-size: 15px; font-weight: bold;"></p>
+        </div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <div id="line-badge" class="badge"></div>
+        <div>
+          <p id="line-name" style="font-weight: bold; font-size: 15px;"></p>
+          <p id="bus-num" style="font-size: 13px; color: var(--primary); font-weight: 600;"></p>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 10px; font-size: 13px;">
+        <p><strong>Horaires :</strong> <span id="service-hours"></span></p>
+        <p style="margin-top: 8px;"><strong>Consignes PCC :</strong></p>
+        <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
+      </div>
+    </div>
+
+    <!-- VUE RÉGULATEUR (Naatan) -->
+    <div id="regulator-view" class="card hidden">
+      <div class="profile-card">
+        <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
+        <div>
+          <p style="font-size: 11px; color: #64748b; font-weight: bold;">PANNEAU DE RÉGULATION (PCC)</p>
+          <p id="regulator-user-name" style="font-size: 15px; font-weight: bold;"></p>
+        </div>
+      </div>
+      
+      <label style="font-size: 12px; font-weight: bold;">Ligne affectée</label>
+      <select id="select-ligne"></select>
+
+      <label style="font-size: 12px; font-weight: bold;">Véhicule assigné (113 bus)</label>
+      <select id="select-bus"></select>
+
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+          <label style="font-size: 12px; font-weight: bold;">Prise</label>
+          <input type="text" id="input-prise" value="06:15">
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 12px; font-weight: bold;">Fin</label>
+          <input type="text" id="input-fin" value="14:30">
+        </div>
+      </div>
+
+      <label style="font-size: 12px; font-weight: bold;">Consignes pour Romain</label>
+      <textarea id="input-notes" rows="2">Prendre le véhicule au dépôt principal.</textarea>
+
+      <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau</label>
+      <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
+
+      <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
+      <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
+
+      <label style="font-size: 12px; font-weight: bold;">Logo du Réseau</label>
+      <input type="file" id="input-logo-file" accept="image/*" style="background: #f8fafc;">
+
+      <label style="font-size: 12px; font-weight: bold;">Photo de Naatan (Régulateur)</label>
+      <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
+
+      <label style="font-size: 12px; font-weight: bold;">Photo de Romain (Conducteur)</label>
+      <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
+
+      <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  // CONFIGURATION FIREBASE INTÉGRÉE
+  const firebaseConfig = {
+    apiKey: "AIzaSyCACzjcG59VuWIGFjM2e0_fipK6hI3CXKY",
+    authDomain: "espace-personnel---pdo.firebaseapp.com",
+    databaseURL: "https://espace-personnel---pdo-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "espace-personnel---pdo",
+    storageBucket: "espace-personnel---pdo.firebasestorage.app",
+    messagingSenderId: "808450248683",
+    appId: "1:808450248683:web:10bf43e54f7796264093ae"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const stateRef = db.ref('palme_dor_state');
+
+  // 1. BASE DE DONNÉES DU RÉSEAU PALME D'OR
+  const LIGNES = [
+    { id: '2', nom: 'Salérin Graudegnan <> Beaulieu - Rosa Parks', badge: '2', bg: '#7dd3fc', text: '#ffffff' },
+    { id: 'C13', nom: 'MONFORT Beausoleil <> Salérin Gare', badge: 'C13', bg: '#facc15', text: '#000000' },
+    { id: '14', nom: 'CFA <> MONFORT Coedic', badge: '14', bg: '#7e22ce', text: '#ffffff' },
+    { id: '15', nom: 'Palais de Justice <> Stade de Verfontaine', badge: '15', bg: '#16a34a', text: '#ffffff' },
+    { id: '16', nom: 'CFA <> Hôtel de Ville', badge: '16', bg: '#c084fc', text: '#ffffff' },
+    { id: '17', nom: 'Verfontaine <> Salérin Leclerc Graudegnan', badge: '17', bg: '#a3e635', text: '#ffffff' },
+    { id: '19', nom: 'Collège Notre Dame <> Hôtel de Ville', badge: '19', bg: '#581c87', text: '#ffffff' },
+    { id: 'C20', nom: 'Kerfaïence <> Jardin des Val', badge: 'C20', bg: '#38bdf8', text: '#ffffff' },
+    { id: '21', nom: 'P+R Ronoé <> Thiers - Victor Hugo', badge: '21', bg: '#1e40af', text: '#ffffff' },
+    { id: 'C23', nom: 'Mendès France <> Jardin des Val', badge: 'C23', bg: '#bae6fd', text: '#ffffff' },
+    { id: 'C24', nom: 'Thiers - Victor Hugo (circulaire)', badge: 'C24', bg: '#60a5fa', text: '#ffffff' },
+    { id: '25', nom: 'Verfontaine <> Salérin Leclerc Graudegnan', badge: '25', bg: '#115e59', text: '#ffffff' },
+    { id: '200', nom: 'Collège Dreyfus <> Salérin Leclerc Graudegnan', badge: '200', bg: '#a3e635', text: '#ffffff' },
+    { id: '201', nom: 'Collège Dreyfus <> Verfontaine', badge: '201', bg: '#64748b', text: '#000000' },
+    { id: '204', nom: 'Maison Blanche <> CFA <> Verfontaine', badge: '204', bg: '#7dd3fc', text: '#000000' },
+    { id: '207', nom: 'Salérin Gare <> Église de Salvaris', badge: '207', bg: '#f87171', text: '#000000' },
+    { id: 'U', nom: 'Maison Blanche <> Restaurant Universitaire', badge: 'U', bg: '#dc2626', text: '#ffffff' },
+    { id: 'P1', nom: 'Stade <> P+R Jardins', badge: 'P1', bg: '#dc2626', text: '#ffffff' },
+    { id: 'P2', nom: 'Stade <> Verfontaine', badge: 'P2', bg: '#2563eb', text: '#ffffff' },
+    { id: 'P3', nom: 'Stade <> Salérin Leclerc Graudegnan', badge: 'P3', bg: '#f97316', text: '#000000' }
+  ];
+
+  const FLEET_RAW = [
+    { num: 1121, model: "Midibus - HeuliezBus GX137 L" },
+    { num: 1122, model: "Midibus - HeuliezBus GX137 L" },
+    { num: 1123, model: "Midibus - HeuliezBus GX137 L" },
+    { num: 1131, model: "Midibus - Heuliez GX137 ELEC" },
+    { num: 1132, model: "Midibus - Heuliez GX137 ELEC" },
+    { num: 1235, model: "Standard - Mercedes Citaro FL" },
+    { num: 1236, model: "Standard - Mercedes Citaro FL" },
+    { num: 1237, model: "Standard - Mercedes Citaro FL" },
+    { num: 1238, model: "Standard - Mercedes Citaro FL" },
+    { num: 1239, model: "Standard - Mercedes Citaro FL" },
+    { num: 1241, model: "Standard - Irisbus Citelis 12 €5" },
+    { num: 1242, model: "Standard - Irisbus Citelis 12 €5" },
+    { num: 1243, model: "Standard - Irisbus Citelis 12 €5" },
+    { num: 1251, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1252, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1253, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1254, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1255, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1256, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1257, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1258, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1259, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1401, model: "Standard - Setra S415 NF" },
+    { num: 1402, model: "Standard - Setra S415 NF" },
+    { num: 1403, model: "Standard - Setra S415 NF" },
+    { num: 1636, model: "Standard - Iveco UW 12 Tector" },
+    { num: 1637, model: "Standard - Iveco UW 12 Tector" },
+    { num: 1638, model: "Standard - Iveco UW 12 Tector" },
+    { num: 1639, model: "Standard - Iveco UW 12 Tector" },
+    { num: 1640, model: "Standard - Iveco UW 12 GNV" },
+    { num: 1641, model: "Standard - Iveco UW 12 GNV" },
+    { num: 1651, model: "Standard - Irisbus Crossway LE" },
+    { num: 1671, model: "Standard - Iveco Crossway LE" },
+    { num: 1672, model: "Standard - Iveco Crossway LE" },
+    { num: 1701, model: "Standard - Iveco Crossway LE GZ" },
+    { num: 1702, model: "Standard - Iveco Crossway LE GZ" },
+    { num: 1703, model: "Standard - Iveco Crossway LE GZ" },
+    { num: 1850, model: "Standard - MAN Lions City A37" },
+    { num: 1851, model: "Standard - MAN Lions City A37" },
+    { num: 1852, model: "Standard - MAN Lions City A37" },
+    { num: 1853, model: "Standard - MAN Lions City A37" },
+    { num: 1854, model: "Standard - MAN Lions City A37" },
+    { num: 1855, model: "Standard - MAN Lions City A37" },
+    { num: 1891, model: "Standard - HeuliezBus GX327" },
+    { num: 1892, model: "Standard - HeuliezBus GX327" },
+    { num: 1893, model: "Standard - HeuliezBus GX327" },
+    { num: 1894, model: "Standard - HeuliezBus GX327" },
+    { num: 1895, model: "Standard - HeuliezBus GX327" },
+    { num: 1896, model: "Standard - HeuliezBus GX327" },
+    { num: 1897, model: "Standard - HeuliezBus GX327" },
+    { num: 1902, model: "Standard - HeuliezBus GX337" },
+    { num: 1905, model: "Standard - Solaris Urbino 12" },
+    { num: 1906, model: "Standard - Solaris Urbino 12" },
+    { num: 1907, model: "Standard - Solaris Urbino 12" },
+    { num: 1908, model: "Standard - Solaris Urbino 12" },
+    { num: 1909, model: "Standard - Solaris Urbino 12" },
+    { num: 1910, model: "Standard - Mercedes Citaro C2" },
+    { num: 1911, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1912, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1913, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1914, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1915, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1921, model: "Standard - Iveco UW NF BHNS" },
+    { num: 1922, model: "Standard - Iveco UW NF BHNS" },
+    { num: 1923, model: "Standard - Iveco UW NF BHNS" },
+    { num: 1924, model: "Standard - Iveco UW NF BHNS" },
+    { num: 1925, model: "Standard - Iveco UW 12 NF" },
+    { num: 1926, model: "Standard - Iveco UW 12 NF" },
+    { num: 1301, model: "Articulé - Mercedes Citaro G" },
+    { num: 1861, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1862, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1863, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1864, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1865, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1866, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1867, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1868, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1869, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1870, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1871, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1872, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1873, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1874, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1875, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1876, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1877, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1878, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1879, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1880, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1881, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1882, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1883, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 2371, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2372, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2373, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2374, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2375, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2376, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2377, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2378, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2379, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2401, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2402, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2403, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2404, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2405, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2406, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2407, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2408, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2409, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2410, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2411, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2412, model: "Articulé - Solaris Urbino 18e" },
+    { num: 3231, model: "Autocar - Mercedes Intouro L" },
+    { num: 3232, model: "Autocar - Mercedes Intouro L" },
+    { num: 3233, model: "Autocar - Mercedes Intouro L" },
+    { num: 3236, model: "Autocar - Iveco Crossway" },
+    { num: 3237, model: "Autocar - Iveco Crossway" },
+    { num: 3238, model: "Autocar - Iveco Crossway cng" },
+    { num: 3239, model: "Autocar - Iveco Crossway cng" },
+    { num: 3240, model: "Autocar - Iveco Crossway cng" }
+  ];
+
+  FLEET_RAW.sort((a, b) => a.num - b.num);
+  const VEHICULES = FLEET_RAW.map(v => `${v.num} - ${v.model}`);
+
+  const USERS = {
+    "1805": { name: "VERNES-FLACHEY Naatan", role: "REGULATEUR" },
+    "1942": { name: "DESVIGNES Romain", role: "CONDUCTEUR" }
+  };
+
+  let state = {
+    ligneId: '2',
+    bus: '1910 - Standard - Mercedes Citaro C2',
+    prise: '06:15',
+    fin: '14:30',
+    notes: 'Vérifier le matériel embarqué au dépôt.',
+    alerte: '',
+    logoBase64: '',
+    regulatorPhoto: '',
+    driverPhoto: ''
+  };
+
+  let currentUser = null;
+
+  // Remplissage des menus déroulants
+  const selectLigne = document.getElementById('select-ligne');
+  LIGNES.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = `Ligne ${l.badge} : ${l.nom}`;
+    selectLigne.appendChild(opt);
+  });
+
+  const selectBus = document.getElementById('select-bus');
+  VEHICULES.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    selectBus.appendChild(opt);
+  });
+
+  // SYNCHRONISATION EN DIRECT
+  stateRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      state = data;
+      render();
+    }
+  });
+
+  // Imports d'images
+  let tempLogoBase64 = '';
+  let tempRegulatorPhoto = '';
+  let tempDriverPhoto = '';
+
+  function bindImageImport(elementId, callback) {
+    document.getElementById(elementId).addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) { callback(evt.target.result); };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  bindImageImport('input-logo-file', val => tempLogoBase64 = val);
+  bindImageImport('input-regulator-photo', val => tempRegulatorPhoto = val);
+  bindImageImport('input-driver-photo', val => tempDriverPhoto = val);
+
+  function render() {
+    const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[0];
+    
+    const logoImg = document.getElementById('app-logo');
+    logoImg.src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=Palme+d%27Or';
+
+    document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
+    document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
+    
+    const alertBox = document.getElementById('alert-display');
+    if (state.alerte) {
+      alertBox.classList.remove('hidden');
+      document.getElementById('alert-text').textContent = state.alerte;
+    } else {
+      alertBox.classList.add('hidden');
+    }
+
+    const badge = document.getElementById('line-badge');
+    badge.textContent = ligne.badge;
+    badge.style.backgroundColor = ligne.bg;
+    badge.style.color = ligne.text;
+
+    document.getElementById('line-name').textContent = ligne.nom;
+    document.getElementById('bus-num').textContent = state.bus;
+    document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
+    document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
+  }
+
+  // Connexion
+  document.getElementById('login-btn').addEventListener('click', () => {
+    const code = document.getElementById('matricule-input').value.trim();
+    if (USERS[code]) {
+      currentUser = USERS[code];
+      document.getElementById('error-txt').style.display = 'none';
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+
+      if (currentUser.role === 'REGULATEUR') {
+        document.getElementById('regulator-view').classList.remove('hidden');
+        document.getElementById('driver-view').classList.add('hidden');
+        document.getElementById('regulator-user-name').textContent = currentUser.name;
+        
+        selectLigne.value = state.ligneId;
+        selectBus.value = state.bus;
+        document.getElementById('input-prise').value = state.prise;
+        document.getElementById('input-fin').value = state.fin;
+        document.getElementById('input-notes').value = state.notes;
+        document.getElementById('input-alerte').value = state.alerte;
+      } else {
+        document.getElementById('driver-view').classList.remove('hidden');
+        document.getElementById('regulator-view').classList.add('hidden');
+        document.getElementById('driver-user-name').textContent = currentUser.name;
+      }
+      render();
+    } else {
+      document.getElementById('error-txt').style.display = 'block';
+    }
+  });
+
+  // Sauvegarde Firebase
+  document.getElementById('save-btn').addEventListener('click', () => {
+    state.ligneId = selectLigne.value;
+    state.bus = selectBus.value;
+    state.prise = document.getElementById('input-prise').value;
+    state.fin = document.getElementById('input-fin').value;
+    state.notes = document.getElementById('input-notes').value;
+    state.alerte = document.getElementById('input-alerte').value;
+    
+    if (tempLogoBase64) state.logoBase64 = tempLogoBase64;
+    if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
+    if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
+
+    stateRef.set(state).then(() => {
+      alert('Modifications transmises au réseau !');
+    }).catch(err => {
+      alert('Erreur : ' + err.message);
+    });
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    location.reload();
+  });
+</script>
+
+</body>
+</html>
