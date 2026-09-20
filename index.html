@@ -71,7 +71,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.1 (Fix Corrigé)</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.2</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -79,7 +79,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.7.1</span>
+      <span class="login-info-badge">Info Réseau • v1.7.2</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -148,7 +148,37 @@
           <button id="submit-service-btn" style="background: #16a34a; margin-top: 5px;">Envoyer la demande au PCC</button>
         </div>
 
-        <div id="driver-status-display" class="hidden"></div>
+        <!-- STATUTS CONDUCTEUR (Gérés proprement par ID fixes) -->
+        <div id="driver-status-display" class="hidden">
+          
+          <!-- État en attente (Pending) -->
+          <div id="status-box-pending" class="service-status-box status-pending hidden">
+            ⏳ Demande transmise au régulateur... En attente de validation.<br>
+            <button id="manual-fallback-btn" style="margin-top: 12px; background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
+              ⏱️ Le régulateur ne répond pas ? Cliquez ici pour choisir votre ligne
+            </button>
+          </div>
+
+          <!-- État mode secours activé (Fallback) -->
+          <div id="status-box-fallback" class="service-status-box status-fallback hidden">
+            ⚠️ <strong>Mode secours activé.</strong><br>
+            Le régulateur n'est pas disponible. Veuillez effectuer la ligne de votre choix ! :)<br>
+            <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
+          </div>
+
+          <!-- État accepté (Accepted) -->
+          <div id="status-box-accepted" class="service-status-box status-accepted hidden">
+            <span id="accepted-text">✅ Prise de service ACCEPTÉE</span><br>
+            <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
+          </div>
+
+          <!-- État refusé (Refused) -->
+          <div id="status-box-refused" class="service-status-box status-refused hidden">
+            ❌ Prise de service REFUSÉE<br>
+            <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
+          </div>
+
+        </div>
       </div>
 
       <!-- Message spécifique pour Romain en bas de page -->
@@ -391,6 +421,7 @@
 
   let currentUser = null;
   let localServiceVersion = 1;
+  let isManualFallbackActive = false; // Variable locale pour retenir le clic secours
 
   const selectLigne = document.getElementById('select-ligne');
   LIGNES.forEach(l => {
@@ -548,75 +579,53 @@
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
       const formContainer = document.getElementById('driver-form-container');
       const statusDisplay = document.getElementById('driver-status-display');
+      
+      const boxPending = document.getElementById('status-box-pending');
+      const boxFallback = document.getElementById('status-box-fallback');
+      const boxAccepted = document.getElementById('status-box-accepted');
+      const boxRefused = document.getElementById('status-box-refused');
+
+      // Masquer toutes les boîtes par défaut
+      boxPending.classList.add('hidden');
+      boxFallback.classList.add('hidden');
+      boxAccepted.classList.add('hidden');
+      boxRefused.classList.add('hidden');
 
       if (!state.serviceRequest) {
         formContainer.classList.remove('hidden');
         statusDisplay.classList.add('hidden');
+        isManualFallbackActive = false; // Réinitialise l'état secours si la demande est fermée
       } else {
         formContainer.classList.add('hidden');
         statusDisplay.classList.remove('hidden');
 
         if (state.serviceRequest.status === 'pending') {
-          statusDisplay.className = 'service-status-box status-pending';
-          statusDisplay.innerHTML = `
-            ⏳ Demande transmise au régulateur... En attente de validation.<br>
-            <button id="manual-fallback-btn" style="margin-top: 12px; background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
-              ⏱️ Le régulateur ne répond pas ? Cliquez ici pour choisir votre ligne
-            </button>
-          `;
-
-          setTimeout(() => {
-            const fallbackBtn = document.getElementById('manual-fallback-btn');
-            if (fallbackBtn) {
-              fallbackBtn.onclick = () => {
-                statusDisplay.className = 'service-status-box status-fallback';
-                statusDisplay.innerHTML = `
-                  ⚠️ <strong>Mode secours activé.</strong><br>
-                  Le régulateur n'est pas disponible. Veuillez effectuer la ligne de votre choix ! :)<br>
-                  <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
-                `;
-                
-                setTimeout(() => {
-                  const resetBtn = document.getElementById('reset-request-btn');
-                  if (resetBtn) {
-                    resetBtn.onclick = () => {
-                      state.serviceRequest = null;
-                      stateRef.set(state);
-                    };
-                  }
-                }, 50);
-              };
-            }
-          }, 50);
-
-        } else {
-          if (state.serviceRequest.status === 'accepted') {
-            statusDisplay.className = 'service-status-box status-accepted';
-            statusDisplay.innerHTML = `
-              ✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE<br>
-              <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
-            `;
-          } else if (state.serviceRequest.status === 'refused') {
-            statusDisplay.className = 'service-status-box status-refused';
-            statusDisplay.innerHTML = `
-              ❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE<br>
-              <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
-            `;
+          if (isManualFallbackActive) {
+            boxFallback.classList.remove('hidden');
+          } else {
+            boxPending.classList.remove('hidden');
           }
-
-          setTimeout(() => {
-            const resetBtn = document.getElementById('reset-request-btn');
-            if (resetBtn) {
-              resetBtn.onclick = () => {
-                state.serviceRequest = null;
-                stateRef.set(state);
-              };
-            }
-          }, 50);
+        } else if (state.serviceRequest.status === 'accepted') {
+          boxAccepted.classList.remove('hidden');
+        } else if (state.serviceRequest.status === 'refused') {
+          boxRefused.classList.remove('hidden');
         }
       }
     }
   }
+
+  // Écouteur direct sur le bouton de secours manuel
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'manual-fallback-btn') {
+      isManualFallbackActive = true;
+      render();
+    }
+    if (e.target && e.target.classList.contains('reset-request-btn')) {
+      isManualFallbackActive = false;
+      state.serviceRequest = null;
+      stateRef.set(state);
+    }
+  });
 
   function loginUser(code) {
     if (!USERS[code]) return;
@@ -683,6 +692,7 @@
       return;
     }
 
+    isManualFallbackActive = false; // Réinitialise l'état secours pour une nouvelle demande
     state.serviceRequest = {
       busNum: busNum,
       ligne: ligne,
@@ -712,7 +722,7 @@
     state.ligneId = selectLigne.value;
     state.bus = selectBus.value;
     state.prise = document.getElementById('input-prise').value;
-    state.fin = document.getElementById('input-fin').value; // <-- Correction ici (parenthèse au lieu du crochet)
+    state.fin = document.getElementById('input-fin').value;
     state.notes = document.getElementById('input-notes').value;
     state.alerte = document.getElementById('input-alerte').value;
     state.loginInfo = document.getElementById('input-login-info').value;
