@@ -55,7 +55,48 @@
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
 
-    /* Faux écran de chargement */
+    /* Écran de lancement (Splash Screen) personnalisé */
+    #splash-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-gradient);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: 20px;
+      transition: opacity 0.5s ease;
+    }
+    .splash-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px 20px;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .splash-logo-box {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      border: 3px solid var(--primary);
+      overflow: hidden;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .splash-logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Faux écran de chargement connexion */
     #fake-loader-screen {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -187,6 +228,18 @@
 </head>
 <body>
 
+<!-- ÉCRAN DE LANCEMENT (SPLASH SCREEN) -->
+<div id="splash-screen">
+  <div class="splash-content">
+    <div class="splash-logo-box">
+      <img id="splash-logo-img" src="https://via.placeholder.com/120?text=Logo" alt="Logo Réseau">
+    </div>
+    <h2 style="color: var(--primary); margin-bottom: 8px;">PDORegul</h2>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Réseau Palme d'Or • v1.8.2</p>
+    <div class="spinner" style="margin: 0 auto;"></div>
+  </div>
+</div>
+
 <div class="container">
 
   <div id="notif-banner" class="card hidden" style="background: #eff6ff; border: 1px solid #bfdbfe; text-align: center; padding: 12px; margin-bottom: 15px;">
@@ -209,7 +262,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PDORegul</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.1.2</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.2</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -479,7 +532,7 @@
           <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
           <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
           <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
-            <p>• Session initialisée sur PDORegul v1.8.1.2</p>
+            <p>• Session initialisée sur PDORegul v1.8.2</p>
           </div>
         </div>
         <p style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 20px;">designed by transdev_stas and Google Gemini in September 2026</p>
@@ -718,11 +771,6 @@
     }
   });
 
-  const savedMatricule = localStorage.getItem('palme_dor_user');
-  if (savedMatricule && USERS[savedMatricule]) {
-    loginUser(savedMatricule);
-  }
-
   stateRef.on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
@@ -806,8 +854,12 @@
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
     
+    // Mise à jour de l'image logo réseau du Splash Screen et des écrans
+    const defaultLogoPlaceholder = 'https://via.placeholder.com/120?text=Logo';
+    document.getElementById('splash-logo-img').src = state.busPhoto || defaultLogoPlaceholder;
     document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
     document.getElementById('app-logo').src = state.busPhoto || 'https://via.placeholder.com/140x40?text=PDORegul';
+    
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
@@ -1018,6 +1070,24 @@
     }
     render();
   }
+
+  // Gestion de l'affichage initial du Splash Screen au chargement de la page
+  window.addEventListener('DOMContentLoaded', () => {
+    // On attend un court moment (2 secondes) pour simuler le chargement du splash screen
+    setTimeout(() => {
+      const splashScreen = document.getElementById('splash-screen');
+      splashScreen.style.opacity = '0';
+      setTimeout(() => {
+        splashScreen.style.display = 'none';
+        
+        // Vérification de la session enregistrée après la disparition du splash screen
+        const savedMatricule = localStorage.getItem('palme_dor_user');
+        if (savedMatricule && USERS[savedMatricule]) {
+          loginUser(savedMatricule);
+        }
+      }, 500); // Temps de la transition fondu
+    }, 2000);
+  });
 
   // Connexion avec le faux loader de 3 secondes
   document.getElementById('login-btn').addEventListener('click', () => {
