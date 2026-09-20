@@ -43,7 +43,6 @@
     .status-pending { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
     .status-accepted { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
     .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
-    .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
 
     .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; margin-top: 20px; color: #ffffff; }
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -56,11 +55,6 @@
 
 <div class="container">
 
-  <div id="notif-banner" class="card hidden" style="background: #eff6ff; border: 1px solid #bfdbfe; text-align: center; padding: 12px; margin-bottom: 15px;">
-    <p style="font-size: 13px; color: #1e40af; margin-bottom: 8px;">Active les notifications pour recevoir les alertes en arrière-plan !</p>
-    <button id="enable-notif-btn" style="background: #2563eb; padding: 8px; font-size: 13px;">Activer les notifications 🔔</button>
-  </div>
-
   <div id="login-screen" class="card" style="margin-top: 15px;">
     <div style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; max-height: 170px; background: #f1f5f9; border: 1px solid var(--border);">
       <img id="login-bus-img" src="https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or" alt="Réseau Palme d'Or" style="width: 100%; height: 100%; object-fit: cover;">
@@ -68,18 +62,17 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.4</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.5 (Anti-Blocage)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
       <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
       
-      <!-- Bouton d'urgence si les images bloquent le chargement -->
-      <button id="emergency-reset-btn" style="background: #64748b; margin-top: 15px; font-size: 11px; padding: 6px;">Réinitialiser les images en cas de blocage 🔄</button>
+      <button id="hard-reset-btn" style="background: #ef4444; margin-top: 15px; font-size: 11px; padding: 8px;">Forcer la réinitialisation totale Firebase ⚠️</button>
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.4</span>
+      <span class="login-info-badge">Info Réseau • v1.6.5</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -241,13 +234,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const stateRef = db.ref('palme_dor_state');
-  
-  try {
-    const messaging = firebase.messaging();
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('firebase-messaging-sw.js').catch(() => {});
-    }
-  } catch(e) {}
 
   const LIGNES = [
     { id: '2', nom: 'Salérin Graudegnan <> Beaulieu - Rosa Parks', badge: '2', bg: '#7dd3fc', text: '#ffffff' },
@@ -358,13 +344,11 @@
     regulatorPhoto: '',
     driverPhoto: '',
     serviceRequest: null,
-    planningRequest: false,
-    serviceVersion: 1
+    planningRequest: false
   };
 
   let currentUser = null;
-  let fallbackTimer = null;
-  let localServiceVersion = 1;
+  let firebaseLoaded = false;
 
   const selectLigne = document.getElementById('select-ligne');
   LIGNES.forEach(l => {
@@ -390,39 +374,33 @@
     checkboxesContainer.appendChild(label);
   });
 
-  const savedMatricule = localStorage.getItem('palme_dor_user');
-  if (savedMatricule && USERS[savedMatricule]) {
-    loginUser(savedMatricule);
-  }
-
-  stateRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      const oldRequest = state.serviceRequest;
-      const oldPlanning = state.planningRequest;
-      state = data;
-
-      if (state.serviceRequest && (state.serviceRequest.status === 'accepted' || state.serviceRequest.status === 'refused')) {
-        if (state.serviceRequest.expiresAt && Date.now() > state.serviceRequest.expiresAt) {
-          state.serviceRequest = null;
-          stateRef.set(state);
-          return;
-        }
-      }
-
+  // Sécurité anti-blocage : Si Firebase met plus de 1.5s à répondre, on force l'affichage
+  setTimeout(() => {
+    if (!firebaseLoaded) {
+      console.warn("Délai Firebase dépassé, forçage de l'affichage local...");
       render();
     }
+  }, 1500);
+
+  stateRef.on('value', (snapshot) => {
+    firebaseLoaded = true;
+    const data = snapshot.val();
+    if (data) {
+      state = data;
+    }
+    render();
+  }, (error) => {
+    console.error("Erreur lecture Firebase:", error);
+    render();
   });
 
-  document.getElementById('emergency-reset-btn').addEventListener('click', () => {
-    if (confirm("Voulez-vous réinitialiser les images et données bloquées sur Firebase ?")) {
-      state.busPhoto = '';
-      state.logoBase64 = '';
-      state.regulatorPhoto = '';
-      state.driverPhoto = '';
-      stateRef.set(state).then(() => {
-        alert("Images réinitialisées ! L'application va se recharger.");
+  document.getElementById('hard-reset-btn').addEventListener('click', () => {
+    if (confirm("Voulez-vous effacer complètement les données distantes de Firebase pour repartir sur une base saine ?")) {
+      stateRef.remove().then(() => {
+        alert("Base nettoyée ! L'application va redémarrer.");
         location.reload();
+      }).catch(err => {
+        alert("Erreur: " + err.message);
       });
     }
   });
@@ -440,9 +418,8 @@
         if (file) {
           const reader = new FileReader();
           reader.onload = function(evt) { 
-            // Sécurité taille image (max ~800Ko pour éviter de saturer Firebase)
-            if(evt.target.result.length > 1000000) {
-              alert("L'image est trop lourde ! Veuillez choisir une image plus légère.");
+            if(evt.target.result.length > 800000) {
+              alert("Image trop lourde (Max 800Ko).");
               return;
             }
             callback(evt.target.result); 
@@ -593,6 +570,11 @@
     render();
   }
 
+  const savedMatricule = localStorage.getItem('palme_dor_user');
+  if (savedMatricule && USERS[savedMatricule]) {
+    loginUser(savedMatricule);
+  }
+
   document.getElementById('login-btn').addEventListener('click', () => {
     const code = document.getElementById('matricule-input').value.trim();
     if (USERS[code]) {
@@ -638,7 +620,6 @@
   document.getElementById('accept-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
       state.serviceRequest.status = 'accepted';
-      state.serviceRequest.expiresAt = Date.now() + 300000;
       stateRef.set(state);
     }
   });
@@ -646,7 +627,6 @@
   document.getElementById('refuse-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
       state.serviceRequest.status = 'refused';
-      state.serviceRequest.expiresAt = Date.now() + 300000;
       stateRef.set(state);
     }
   });
@@ -656,7 +636,7 @@
     state.bus = selectBus.value;
     state.prise = document.getElementById('input-prise').value;
     state.fin = document.getElementById('input-fin').value;
-    state.notes = document.getElementById('input-notes').value; // Correction du crochet de fermeture buggé
+    state.notes = document.getElementById('input-notes').value;
     state.alerte = document.getElementById('input-alerte').value;
     state.loginInfo = document.getElementById('input-login-info').value;
     
@@ -666,15 +646,13 @@
     });
     state.loginLines = selectedLines;
 
-    state.serviceVersion = (state.serviceVersion || 1) + 1;
-
     if (tempBusPhoto) state.busPhoto = tempBusPhoto;
     if (tempLogoBase64) state.logoBase64 = tempLogoBase64;
     if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
     if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
 
     stateRef.set(state).then(() => {
-      alert('Modifications et badges transmis au réseau !');
+      alert('Modifications transmises au réseau !');
     }).catch(err => {
       alert('Erreur : ' + err.message);
     });
