@@ -45,7 +45,6 @@
     .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
     .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
 
-    /* Nouveau style pour le bloc info trafic de l'écran de connexion */
     .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; text-align: center; margin-top: 20px; color: #ffffff; }
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
   </style>
@@ -66,18 +65,17 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
       <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
     </div>
 
-    <!-- Encadré Info Trafic dynamique géré par le régulateur -->
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.5</span>
+      <span class="login-info-badge">Info Réseau • v1.6</span>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
-        Module de prise de service optimisé avec minuteur de secours de 2 minutes. 🚍⚡
+        Module de prise de service optimisé avec minuteur de secours et demande de planning. 🚍⚡
       </p>
     </div>
   </div>
@@ -121,6 +119,11 @@
         <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
       </div>
 
+      <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 15px;">
+        <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">📅 GESTION DU PLANNING</p>
+        <button id="planning-request-btn" style="background: #7c3aed; color: white;">Effectuer une demande de planning 🗓️</button>
+      </div>
+
       <div style="border-top: 2px dashed var(--border); padding-top: 15px;">
         <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 DEMANDE DE SERVICE</p>
         
@@ -151,8 +154,14 @@
         </div>
       </div>
 
+      <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
+        <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ RAPPEL DEMANDE DE PLANNING</p>
+        <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
+        <button id="dismiss-planning-btn" style="background: #7c3aed; padding: 8px;">Marquer comme traité ✓</button>
+      </div>
+
       <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
-        <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE EN ATTENTE</p>
+        <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
         <p style="font-size: 13px;" id="req-details"></p>
         <div style="display: flex; gap: 10px; margin-top: 10px;">
           <button id="accept-req-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
@@ -183,7 +192,6 @@
       <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
       <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
 
-      <!-- Nouveau champ de personnalisation pour l'écran de connexion -->
       <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
       <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'écran d'accueil..."></textarea>
 
@@ -358,6 +366,7 @@
     regulatorPhoto: '',
     driverPhoto: '',
     serviceRequest: null,
+    planningRequest: false,
     serviceVersion: 1
   };
 
@@ -390,6 +399,7 @@
     const data = snapshot.val();
     if (data) {
       const oldRequest = state.serviceRequest;
+      const oldPlanning = state.planningRequest;
       state = data;
       render();
 
@@ -398,6 +408,9 @@
           if (!oldRequest || oldRequest.timestamp !== state.serviceRequest.timestamp) {
             new Notification("🚨 Alerte PCC", { body: "Conducteur 1942 vous demande un service !" });
           }
+        }
+        if (state.planningRequest && !oldPlanning) {
+          new Notification("🗓️ Demande de Planning", { body: "Romain demande un rappel de planning !" });
         }
       }
 
@@ -424,14 +437,17 @@
   let tempDriverPhoto = '';
 
   function bindImageImport(elementId, callback) {
-    document.getElementById(elementId).addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) { callback(evt.target.result); };
-        reader.readAsDataURL(file);
-      }
-    });
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(evt) { callback(evt.target.result); };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
   }
 
   bindImageImport('input-bus-photo', val => tempBusPhoto = val);
@@ -447,7 +463,6 @@
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
-    // Affichage texte écran de connexion
     document.getElementById('login-info-text').textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
 
     const alertBox = document.getElementById('alert-display');
@@ -479,6 +494,13 @@
       `;
     } else {
       reqBox.classList.add('hidden');
+    }
+
+    const planningAlert = document.getElementById('regulator-planning-alert');
+    if (state.planningRequest) {
+      planningAlert.classList.remove('hidden');
+    } else {
+      planningAlert.classList.add('hidden');
     }
 
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
@@ -523,6 +545,7 @@
   }
 
   function loginUser(code) {
+    if (!USERS[code]) return;
     currentUser = USERS[code];
     localStorage.setItem('palme_dor_user', code);
     document.getElementById('error-txt').style.display = 'none';
@@ -557,6 +580,18 @@
     } else {
       document.getElementById('error-txt').style.display = 'block';
     }
+  });
+
+  document.getElementById('planning-request-btn').addEventListener('click', () => {
+    state.planningRequest = true;
+    stateRef.set(state).then(() => {
+      alert("Demande de planning envoyée au PCC ! 🗓️");
+    });
+  });
+
+  document.getElementById('dismiss-planning-btn').addEventListener('click', () => {
+    state.planningRequest = false;
+    stateRef.set(state);
   });
 
   document.getElementById('submit-service-btn').addEventListener('click', () => {
@@ -625,4 +660,3 @@
 
 </body>
 </html>
-
