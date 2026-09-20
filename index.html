@@ -45,8 +45,9 @@
     .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
     .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
 
-    .beta-card { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px; text-align: center; margin-top: 20px; }
-    .beta-badge { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* Nouveau style pour le bloc info trafic de l'écran de connexion */
+    .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; text-align: center; margin-top: 20px; color: #ffffff; }
+    .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
@@ -72,9 +73,10 @@
       <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
     </div>
 
-    <div class="beta-card">
-      <span class="beta-badge">Phase Expérimentale • v1.4.1</span>
-      <p style="font-size: 12px; color: #64748b; line-height: 1.4;">
+    <!-- Encadré Info Trafic dynamique géré par le régulateur -->
+    <div class="login-info-card">
+      <span class="login-info-badge">Info Réseau • v1.5</span>
+      <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé avec minuteur de secours de 2 minutes. 🚍⚡
       </p>
     </div>
@@ -178,8 +180,12 @@
       <label style="font-size: 12px; font-weight: bold;">Consignes pour Romain</label>
       <textarea id="input-notes" rows="2">Prendre le véhicule au dépôt principal.</textarea>
 
-      <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau</label>
+      <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
       <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
+
+      <!-- Nouveau champ de personnalisation pour l'écran de connexion -->
+      <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
+      <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'écran d'accueil..."></textarea>
 
       <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
       <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
@@ -346,6 +352,7 @@
     fin: '14:30',
     notes: 'Vérifier le matériel embarqué au dépôt.',
     alerte: '',
+    loginInfo: 'Module de prise de service optimisé avec minuteur de secours de 2 minutes. 🚍⚡',
     busPhoto: '',
     logoBase64: '',
     regulatorPhoto: '',
@@ -440,6 +447,9 @@
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
+    // Affichage texte écran de connexion
+    document.getElementById('login-info-text').textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
+
     const alertBox = document.getElementById('alert-display');
     if (state.alerte) {
       alertBox.classList.remove('hidden');
@@ -488,7 +498,6 @@
           statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
 
           if (!fallbackTimer) {
-            // Minuteur de 2 minutes (120 000 ms)
             fallbackTimer = setTimeout(() => {
               if (state.serviceRequest && state.serviceRequest.status === 'pending') {
                 statusDisplay.className = 'service-status-box status-fallback';
@@ -531,6 +540,7 @@
       document.getElementById('input-fin').value = state.fin;
       document.getElementById('input-notes').value = state.notes;
       document.getElementById('input-alerte').value = state.alerte;
+      document.getElementById('input-login-info').value = state.loginInfo || '';
     } else {
       document.getElementById('driver-view').classList.remove('hidden');
       document.getElementById('regulator-view').classList.add('hidden');
@@ -591,6 +601,7 @@
     state.fin = document.getElementById('input-fin').value;
     state.notes = document.getElementById('input-notes').value;
     state.alerte = document.getElementById('input-alerte').value;
+    state.loginInfo = document.getElementById('input-login-info').value;
     
     state.serviceVersion = (state.serviceVersion || 1) + 1;
 
