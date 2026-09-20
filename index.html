@@ -71,7 +71,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.2</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.3</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -79,7 +79,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.7.2</span>
+      <span class="login-info-badge">Info Réseau • v1.7.3</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -127,11 +127,45 @@
         <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
       </div>
 
+      <!-- GESTION DU PLANNING (Bouton Violet) -->
       <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 15px;">
         <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">📅 GESTION DU PLANNING</p>
-        <button id="planning-request-btn" style="background: #7c3aed; color: white;">Effectuer une demande de planning 🗓️</button>
+        
+        <div id="planning-form-container">
+          <button id="planning-request-btn" style="background: #7c3aed; color: white;">Effectuer une demande de planning 🗓️</button>
+        </div>
+
+        <div id="planning-status-display" class="hidden">
+          <!-- État en attente planning -->
+          <div id="planning-box-pending" class="service-status-box status-pending hidden" style="border-color: #7c3aed; background: #f5f3ff; color: #6d28d9;">
+            ⏳ Demande de planning transmise... En attente du régulateur.<br>
+            <button id="manual-planning-fallback-btn" style="margin-top: 12px; background: transparent; color: #6d28d9; border: 1px solid #7c3aed; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
+              ⏱️ Pas de réponse ? Activer le mode secours planning
+            </button>
+          </div>
+
+          <!-- État secours planning -->
+          <div id="planning-box-fallback" class="service-status-box status-fallback hidden">
+            ⚠️ <strong>Mode secours planning activé.</strong><br>
+            Le régulateur n'est pas disponible pour le planning. Vous pouvez procéder à vos modifications !<br>
+            <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #7c3aed;">Fermer et recommencer</button>
+          </div>
+
+          <!-- État validé planning -->
+          <div id="planning-box-accepted" class="service-status-box status-accepted hidden">
+            ✅ Demande de planning ACCEPTÉE par le PCC<br>
+            <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
+          </div>
+
+          <!-- État refusé planning -->
+          <div id="planning-box-refused" class="service-status-box status-refused hidden">
+            ❌ Demande de planning REFUSÉE par le PCC<br>
+            <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
+          </div>
+        </div>
       </div>
 
+      <!-- DEMANDE DE SERVICE (Bouton Vert) -->
       <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 10px;">
         <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 DEMANDE DE SERVICE</p>
         
@@ -148,10 +182,7 @@
           <button id="submit-service-btn" style="background: #16a34a; margin-top: 5px;">Envoyer la demande au PCC</button>
         </div>
 
-        <!-- STATUTS CONDUCTEUR (Gérés proprement par ID fixes) -->
         <div id="driver-status-display" class="hidden">
-          
-          <!-- État en attente (Pending) -->
           <div id="status-box-pending" class="service-status-box status-pending hidden">
             ⏳ Demande transmise au régulateur... En attente de validation.<br>
             <button id="manual-fallback-btn" style="margin-top: 12px; background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
@@ -159,25 +190,21 @@
             </button>
           </div>
 
-          <!-- État mode secours activé (Fallback) -->
           <div id="status-box-fallback" class="service-status-box status-fallback hidden">
             ⚠️ <strong>Mode secours activé.</strong><br>
             Le régulateur n'est pas disponible. Veuillez effectuer la ligne de votre choix ! :)<br>
             <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
           </div>
 
-          <!-- État accepté (Accepted) -->
           <div id="status-box-accepted" class="service-status-box status-accepted hidden">
-            <span id="accepted-text">✅ Prise de service ACCEPTÉE</span><br>
+            ✅ Prise de service ACCEPTÉE<br>
             <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
           </div>
 
-          <!-- État refusé (Refused) -->
           <div id="status-box-refused" class="service-status-box status-refused hidden">
             ❌ Prise de service REFUSÉE<br>
             <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
           </div>
-
         </div>
       </div>
 
@@ -199,12 +226,17 @@
         </div>
       </div>
 
+      <!-- Alerte Planning Régulateur -->
       <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
-        <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ RAPPEL DEMANDE DE PLANNING</p>
+        <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
         <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
-        <button id="dismiss-planning-btn" style="background: #7c3aed; padding: 8px;">Marquer comme traité ✓</button>
+        <div style="display: flex; gap: 10px;">
+          <button id="accept-planning-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
+          <button id="refuse-planning-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
+        </div>
       </div>
 
+      <!-- Alerte Service Régulateur -->
       <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
         <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
         <p style="font-size: 13px;" id="req-details"></p>
@@ -415,13 +447,14 @@
     regulatorPhoto: '',
     driverPhoto: '',
     serviceRequest: null,
-    planningRequest: false,
+    planningRequest: null, // Transformé en objet (status + timestamp)
     serviceVersion: 1
   };
 
   let currentUser = null;
   let localServiceVersion = 1;
-  let isManualFallbackActive = false; // Variable locale pour retenir le clic secours
+  let isManualFallbackActive = false;
+  let isManualPlanningFallbackActive = false;
 
   const selectLigne = document.getElementById('select-ligne');
   LIGNES.forEach(l => {
@@ -466,8 +499,10 @@
             new Notification("🚨 Alerte PCC", { body: "Conducteur 1942 vous demande un service !" });
           }
         }
-        if (state.planningRequest && !oldPlanning) {
-          new Notification("🗓️ Demande de Planning", { body: "Romain demande un rappel de planning !" });
+        if (state.planningRequest && state.planningRequest.status === 'pending') {
+          if (!oldPlanning || oldPlanning.timestamp !== state.planningRequest.timestamp) {
+            new Notification("🗓️ Demande de Planning", { body: "Romain demande une modification de planning !" });
+          }
         }
       }
 
@@ -477,6 +512,14 @@
             new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
           } else if (state.serviceRequest.status === 'refused') {
             new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
+          }
+        }
+
+        if (oldPlanning && oldPlanning.status === 'pending' && state.planningRequest) {
+          if (state.planningRequest.status === 'accepted') {
+            new Notification("✅ Planning accepté", { body: "Votre demande de planning a été validée !" });
+          } else if (state.planningRequest.status === 'refused') {
+            new Notification("❌ Planning refusé", { body: "Votre demande de planning a été refusée." });
           }
         }
 
@@ -556,6 +599,14 @@
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
 
+    // Gestion affichage régulateur pour le planning
+    const planningAlert = document.getElementById('regulator-planning-alert');
+    if (state.planningRequest && state.planningRequest.status === 'pending') {
+      planningAlert.classList.remove('hidden');
+    } else {
+      planningAlert.classList.add('hidden');
+    }
+
     const reqBox = document.getElementById('regulator-request-box');
     if (state.serviceRequest && state.serviceRequest.status === 'pending') {
       reqBox.classList.remove('hidden');
@@ -569,14 +620,43 @@
       reqBox.classList.add('hidden');
     }
 
-    const planningAlert = document.getElementById('regulator-planning-alert');
-    if (state.planningRequest) {
-      planningAlert.classList.remove('hidden');
-    } else {
-      planningAlert.classList.add('hidden');
-    }
-
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
+      // --- SECTION PLANNING (Bouton Violet) ---
+      const planningForm = document.getElementById('planning-form-container');
+      const planningStatus = document.getElementById('planning-status-display');
+      
+      const pBoxPending = document.getElementById('planning-box-pending');
+      const pBoxFallback = document.getElementById('planning-box-fallback');
+      const pBoxAccepted = document.getElementById('planning-box-accepted');
+      const pBoxRefused = document.getElementById('planning-box-refused');
+
+      pBoxPending.classList.add('hidden');
+      pBoxFallback.classList.add('hidden');
+      pBoxAccepted.classList.add('hidden');
+      pBoxRefused.classList.add('hidden');
+
+      if (!state.planningRequest) {
+        planningForm.classList.remove('hidden');
+        planningStatus.classList.add('hidden');
+        isManualPlanningFallbackActive = false;
+      } else {
+        planningForm.classList.add('hidden');
+        planningStatus.classList.remove('hidden');
+
+        if (state.planningRequest.status === 'pending') {
+          if (isManualPlanningFallbackActive) {
+            pBoxFallback.classList.remove('hidden');
+          } else {
+            pBoxPending.classList.remove('hidden');
+          }
+        } else if (state.planningRequest.status === 'accepted') {
+          pBoxAccepted.classList.remove('hidden');
+        } else if (state.planningRequest.status === 'refused') {
+          pBoxRefused.classList.remove('hidden');
+        }
+      }
+
+      // --- SECTION SERVICE (Bouton Vert) ---
       const formContainer = document.getElementById('driver-form-container');
       const statusDisplay = document.getElementById('driver-status-display');
       
@@ -585,7 +665,6 @@
       const boxAccepted = document.getElementById('status-box-accepted');
       const boxRefused = document.getElementById('status-box-refused');
 
-      // Masquer toutes les boîtes par défaut
       boxPending.classList.add('hidden');
       boxFallback.classList.add('hidden');
       boxAccepted.classList.add('hidden');
@@ -594,7 +673,7 @@
       if (!state.serviceRequest) {
         formContainer.classList.remove('hidden');
         statusDisplay.classList.add('hidden');
-        isManualFallbackActive = false; // Réinitialise l'état secours si la demande est fermée
+        isManualFallbackActive = false;
       } else {
         formContainer.classList.add('hidden');
         statusDisplay.classList.remove('hidden');
@@ -614,8 +693,9 @@
     }
   }
 
-  // Écouteur direct sur le bouton de secours manuel
+  // Écouteurs globaux pour les clics sur les boutons de secours et de réinitialisation
   document.addEventListener('click', (e) => {
+    // Secours Prise de Service (Vert)
     if (e.target && e.target.id === 'manual-fallback-btn') {
       isManualFallbackActive = true;
       render();
@@ -623,6 +703,17 @@
     if (e.target && e.target.classList.contains('reset-request-btn')) {
       isManualFallbackActive = false;
       state.serviceRequest = null;
+      stateRef.set(state);
+    }
+
+    // Secours Planning (Violet)
+    if (e.target && e.target.id === 'manual-planning-fallback-btn') {
+      isManualPlanningFallbackActive = true;
+      render();
+    }
+    if (e.target && e.target.classList.contains('reset-planning-btn')) {
+      isManualPlanningFallbackActive = false;
+      state.planningRequest = null;
       stateRef.set(state);
     }
   });
@@ -670,18 +761,32 @@
     }
   });
 
+  // Action bouton planning conducteur (Violet)
   document.getElementById('planning-request-btn').addEventListener('click', () => {
-    state.planningRequest = true;
-    stateRef.set(state).then(() => {
-      alert("Demande de planning envoyée au PCC ! 🗓️");
-    });
-  });
-
-  document.getElementById('dismiss-planning-btn').addEventListener('click', () => {
-    state.planningRequest = false;
+    isManualPlanningFallbackActive = false;
+    state.planningRequest = {
+      status: 'pending',
+      timestamp: Date.now()
+    };
     stateRef.set(state);
   });
 
+  // Actions régulateur pour le planning
+  document.getElementById('accept-planning-btn').addEventListener('click', () => {
+    if (state.planningRequest) {
+      state.planningRequest.status = 'accepted';
+      stateRef.set(state);
+    }
+  });
+
+  document.getElementById('refuse-planning-btn').addEventListener('click', () => {
+    if (state.planningRequest) {
+      state.planningRequest.status = 'refused';
+      stateRef.set(state);
+    }
+  });
+
+  // Action bouton prise de service conducteur (Vert)
   document.getElementById('submit-service-btn').addEventListener('click', () => {
     const busNum = document.getElementById('driver-input-bus').value.trim();
     const ligne = document.getElementById('driver-input-ligne').value.trim();
@@ -692,7 +797,7 @@
       return;
     }
 
-    isManualFallbackActive = false; // Réinitialise l'état secours pour une nouvelle demande
+    isManualFallbackActive = false;
     state.serviceRequest = {
       busNum: busNum,
       ligne: ligne,
