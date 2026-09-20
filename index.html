@@ -71,7 +71,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.3</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.4</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -79,7 +79,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.7.3</span>
+      <span class="login-info-badge">Info Réseau • v1.7.4</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -136,7 +136,6 @@
         </div>
 
         <div id="planning-status-display" class="hidden">
-          <!-- État en attente planning -->
           <div id="planning-box-pending" class="service-status-box status-pending hidden" style="border-color: #7c3aed; background: #f5f3ff; color: #6d28d9;">
             ⏳ Demande de planning transmise... En attente du régulateur.<br>
             <button id="manual-planning-fallback-btn" style="margin-top: 12px; background: transparent; color: #6d28d9; border: 1px solid #7c3aed; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
@@ -144,20 +143,17 @@
             </button>
           </div>
 
-          <!-- État secours planning -->
           <div id="planning-box-fallback" class="service-status-box status-fallback hidden">
             ⚠️ <strong>Mode secours planning activé.</strong><br>
             Le régulateur n'est pas disponible pour le planning. Vous pouvez procéder à vos modifications !<br>
             <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #7c3aed;">Fermer et recommencer</button>
           </div>
 
-          <!-- État validé planning -->
           <div id="planning-box-accepted" class="service-status-box status-accepted hidden">
             ✅ Demande de planning ACCEPTÉE par le PCC<br>
             <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
           </div>
 
-          <!-- État refusé planning -->
           <div id="planning-box-refused" class="service-status-box status-refused hidden">
             ❌ Demande de planning REFUSÉE par le PCC<br>
             <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
@@ -339,6 +335,7 @@
   });
 
   const LIGNES = [
+    { id: 'AUCUNE', nom: 'Aucune ligne ne vous est assignée pour aujourd’hui', badge: '∅', bg: '#64748b', text: '#ffffff' },
     { id: '2', nom: 'Salérin Graudegnan <> Beaulieu - Rosa Parks', badge: '2', bg: '#7dd3fc', text: '#ffffff' },
     { id: 'C13', nom: 'MONFORT Beausoleil <> Salérin Gare', badge: 'C13', bg: '#facc15', text: '#000000' },
     { id: '14', nom: 'CFA <> MONFORT Coedic', badge: '14', bg: '#7e22ce', text: '#ffffff' },
@@ -362,6 +359,7 @@
   ];
 
   const FLEET_RAW = [
+    { num: "Aucun", model: "Aucun véhicule ne vous est assigné pour aujourd’hui" },
     { num: 1121, model: "Midibus - HeuliezBus GX137 L" }, { num: 1122, model: "Midibus - HeuliezBus GX137 L" },
     { num: 1123, model: "Midibus - HeuliezBus GX137 L" }, { num: 1131, model: "Midibus - Heuliez GX137 ELEC" },
     { num: 1132, model: "Midibus - Heuliez GX137 ELEC" }, { num: 1235, model: "Standard - Mercedes Citaro FL" },
@@ -425,8 +423,12 @@
     { num: 3240, model: "Autocar - Iveco Crossway cng" }
   ];
 
+  // On trie uniquement les véhicules à partir du 2ème élément pour garder "Aucun" tout en haut
+  const aucunVehicule = FLEET_RAW.shift();
   FLEET_RAW.sort((a, b) => a.num - b.num);
-  const VEHICULES = FLEET_RAW.map(v => `${v.num} - ${v.model}`);
+  FLEET_RAW.unshift(aucunVehicule);
+
+  const VEHICULES = FLEET_RAW.map(v => v.num === "Aucun" ? v.model : `${v.num} - ${v.model}`);
 
   const USERS = {
     "1805": { name: "VERNES-FLACHEY Naatan", role: "REGULATEUR" },
@@ -447,7 +449,7 @@
     regulatorPhoto: '',
     driverPhoto: '',
     serviceRequest: null,
-    planningRequest: null, // Transformé en objet (status + timestamp)
+    planningRequest: null,
     serviceVersion: 1
   };
 
@@ -460,7 +462,7 @@
   LIGNES.forEach(l => {
     const opt = document.createElement('option');
     opt.value = l.id;
-    opt.textContent = `Ligne ${l.badge} : ${l.nom}`;
+    opt.textContent = l.id === 'AUCUNE' ? l.nom : `Ligne ${l.badge} : ${l.nom}`;
     selectLigne.appendChild(opt);
   });
 
@@ -474,10 +476,12 @@
 
   const checkboxesContainer = document.getElementById('login-lines-checkboxes');
   LIGNES.forEach(l => {
-    const label = document.createElement('label');
-    label.className = 'checkbox-item';
-    label.innerHTML = `<input type="checkbox" value="${l.id}" class="login-line-chk"> L.${l.badge}`;
-    checkboxesContainer.appendChild(label);
+    if (l.id !== 'AUCUNE') {
+      const label = document.createElement('label');
+      label.className = 'checkbox-item';
+      label.innerHTML = `<input type="checkbox" value="${l.id}" class="login-line-chk"> L.${l.badge}`;
+      checkboxesContainer.appendChild(label);
+    }
   });
 
   const savedMatricule = localStorage.getItem('palme_dor_user');
@@ -556,7 +560,7 @@
   bindImageImport('input-driver-photo', val => tempDriverPhoto = val);
 
   function render() {
-    const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[0];
+    const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
     
     document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
     document.getElementById('app-logo').src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=Palme+d%27Or';
@@ -599,7 +603,6 @@
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
 
-    // Gestion affichage régulateur pour le planning
     const planningAlert = document.getElementById('regulator-planning-alert');
     if (state.planningRequest && state.planningRequest.status === 'pending') {
       planningAlert.classList.remove('hidden');
@@ -621,7 +624,6 @@
     }
 
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
-      // --- SECTION PLANNING (Bouton Violet) ---
       const planningForm = document.getElementById('planning-form-container');
       const planningStatus = document.getElementById('planning-status-display');
       
@@ -656,7 +658,6 @@
         }
       }
 
-      // --- SECTION SERVICE (Bouton Vert) ---
       const formContainer = document.getElementById('driver-form-container');
       const statusDisplay = document.getElementById('driver-status-display');
       
@@ -693,9 +694,7 @@
     }
   }
 
-  // Écouteurs globaux pour les clics sur les boutons de secours et de réinitialisation
   document.addEventListener('click', (e) => {
-    // Secours Prise de Service (Vert)
     if (e.target && e.target.id === 'manual-fallback-btn') {
       isManualFallbackActive = true;
       render();
@@ -706,7 +705,6 @@
       stateRef.set(state);
     }
 
-    // Secours Planning (Violet)
     if (e.target && e.target.id === 'manual-planning-fallback-btn') {
       isManualPlanningFallbackActive = true;
       render();
@@ -761,7 +759,6 @@
     }
   });
 
-  // Action bouton planning conducteur (Violet)
   document.getElementById('planning-request-btn').addEventListener('click', () => {
     isManualPlanningFallbackActive = false;
     state.planningRequest = {
@@ -771,7 +768,6 @@
     stateRef.set(state);
   });
 
-  // Actions régulateur pour le planning
   document.getElementById('accept-planning-btn').addEventListener('click', () => {
     if (state.planningRequest) {
       state.planningRequest.status = 'accepted';
@@ -786,7 +782,6 @@
     }
   });
 
-  // Action bouton prise de service conducteur (Vert)
   document.getElementById('submit-service-btn').addEventListener('click', () => {
     const busNum = document.getElementById('driver-input-bus').value.trim();
     const ligne = document.getElementById('driver-input-ligne').value.trim();
