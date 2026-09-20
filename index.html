@@ -68,7 +68,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.1</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.2</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -76,10 +76,10 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.1</span>
+      <span class="login-info-badge">Info Réseau • v1.6.2</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
-        Module de prise de service optimisé avec badges dynamiques. 🚍⚡
+        Module de prise de service optimisé avec reset automatique. 🚍⚡
       </p>
     </div>
   </div>
@@ -367,7 +367,7 @@
     fin: '14:30',
     notes: 'Vérifier le matériel embarqué au dépôt.',
     alerte: '',
-    loginInfo: 'Module de prise de service optimisé avec badges dynamiques. 🚍⚡',
+    loginInfo: 'Module de prise de service optimisé avec reset automatique. 🚍⚡',
     loginLines: [],
     busPhoto: '',
     logoBase64: '',
@@ -380,6 +380,7 @@
 
   let currentUser = null;
   let fallbackTimer = null;
+  let autoResetTimer = null;
   let localServiceVersion = 1;
 
   const selectLigne = document.getElementById('select-ligne');
@@ -543,6 +544,7 @@
         formContainer.classList.remove('hidden');
         statusDisplay.classList.add('hidden');
         if (fallbackTimer) clearTimeout(fallbackTimer);
+        if (autoResetTimer) clearTimeout(autoResetTimer);
       } else {
         formContainer.classList.add('hidden');
         statusDisplay.classList.remove('hidden');
@@ -566,11 +568,32 @@
         } else if (state.serviceRequest.status === 'accepted') {
           if (fallbackTimer) clearTimeout(fallbackTimer);
           statusDisplay.className = 'service-status-box status-accepted';
-          statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE`;
+          statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTée`;
+
+          // Lancement du timer de 5 minutes (300000 ms) pour nettoyer et revenir au formulaire
+          if (!autoResetTimer) {
+            autoResetTimer = setTimeout(() => {
+              state.serviceRequest = null;
+              if (currentUser.role === 'REGULATEUR' || currentUser.role === 'CONDUCTEUR') {
+                stateRef.set(state);
+              }
+            }, 300000);
+          }
+
         } else if (state.serviceRequest.status === 'refused') {
           if (fallbackTimer) clearTimeout(fallbackTimer);
           statusDisplay.className = 'service-status-box status-refused';
           statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
+
+          // Timer de 5 minutes également en cas de refus
+          if (!autoResetTimer) {
+            autoResetTimer = setTimeout(() => {
+              state.serviceRequest = null;
+              if (currentUser.role === 'REGULATEUR' || currentUser.role === 'CONDUCTEUR') {
+                stateRef.set(state);
+              }
+            }, 300000);
+          }
         }
       }
     }
