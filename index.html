@@ -26,8 +26,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; color-scheme: light; }
     body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 105px; background-attachment: fixed; }
     
-    .container { max-width: 500px; margin: 0 auto; }
-    .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
+    .container { max-width: 500px; margin: 0 auto; position: relative; }
+    .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; position: relative; overflow: hidden; }
     
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     .logo-img { height: 40px; max-width: 140px; object-fit: contain; }
@@ -54,6 +54,32 @@
     
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
+
+    /* Faux écran de chargement */
+    #fake-loader-screen {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      border-radius: 16px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
     /* Barre de navigation blanche, avec l'onglet actif en case bleue aux bords arrondis */
     .nav-bar {
@@ -93,7 +119,6 @@
       fill: #64748b;
       margin-bottom: 3px;
     }
-    /* Case bleue aux bords arrondis pour l'élément actif */
     .nav-item.active {
       background: var(--primary);
       color: #ffffff;
@@ -114,6 +139,13 @@
 
   <!-- ECRAN DE CONNEXION -->
   <div id="login-screen" class="card" style="margin-top: 15px;">
+    
+    <!-- Loader caché par défaut -->
+    <div id="fake-loader-screen" class="hidden">
+      <div class="spinner"></div>
+      <p style="font-size: 13px; font-weight: 600; color: var(--primary);">Connexion au réseau Palme d'Or...</p>
+    </div>
+
     <div style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; max-height: 170px; background: #f1f5f9; border: 1px solid var(--border);">
       <img id="login-bus-img" src="https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or" alt="Réseau Palme d'Or" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
@@ -157,9 +189,7 @@
       <strong>Alerte Trafic :</strong> <span id="alert-text"></span>
     </div>
 
-    <!-- ========================================== -->
-    <!-- ONGLET 1 : MESSAGERIE (Bientôt V2)         -->
-    <!-- ========================================== -->
+    <!-- ONGLET 1 : MESSAGERIE -->
     <div id="tab-chat" class="tab-content hidden">
       <div class="card" style="text-align: center; padding: 40px 20px;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">💬 Messagerie Directe</h3>
@@ -169,9 +199,7 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- ONGLET 2 : SIGNALEMENTS (Bientôt V2)       -->
-    <!-- ========================================== -->
+    <!-- ONGLET 2 : SIGNALEMENTS -->
     <div id="tab-signals" class="tab-content hidden">
       <div class="card" style="text-align: center; padding: 40px 20px;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">⚠️ Signalement d'Incident</h3>
@@ -181,9 +209,7 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- ONGLET 3 : ACCUEIL / FEUILLE DE ROUTE      -->
-    <!-- ========================================== -->
+    <!-- ONGLET 3 : ACCUEIL -->
     <div id="tab-home" class="tab-content">
       
       <!-- VUE CONDUCTEUR -->
@@ -210,7 +236,7 @@
           <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
         </div>
 
-        <!-- GESTION DU PLANNING (Bouton Violet) -->
+        <!-- GESTION DU PLANNING -->
         <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 15px;">
           <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">📅 GESTION DU PLANNING</p>
           
@@ -244,7 +270,7 @@
           </div>
         </div>
 
-        <!-- DEMANDE DE SERVICE (Bouton Vert) -->
+        <!-- DEMANDE DE SERVICE -->
         <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 10px;">
           <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 DEMANDE DE SERVICE</p>
           
@@ -287,7 +313,6 @@
           </div>
         </div>
 
-        <!-- Message spécifique pour Romain en bas de page -->
         <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 15px; text-align: center;">
           <p style="font-size: 12px; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
             ⚠️ Veuillez effectuer votre demande de planning au moins 30 minutes avant votre prise de service !
@@ -305,7 +330,6 @@
           </div>
         </div>
 
-        <!-- Alerte Planning Régulateur -->
         <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
           <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
           <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
@@ -315,7 +339,6 @@
           </div>
         </div>
 
-        <!-- Alerte Service Régulateur -->
         <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
           <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
           <p style="font-size: 13px;" id="req-details"></p>
@@ -374,9 +397,7 @@
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- ONGLET 4 : PLAN DU RÉSEAU (PDF Dynamique)  -->
-    <!-- ========================================== -->
+    <!-- ONGLET 4 : PLAN DU RÉSEAU -->
     <div id="tab-plan" class="tab-content hidden">
       <div class="card" style="text-align: center;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">🗺️ Plan du Réseau</h3>
@@ -388,9 +409,7 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- ONGLET 5 : HISTORIQUE                      -->
-    <!-- ========================================== -->
+    <!-- ONGLET 5 : HISTORIQUE -->
     <div id="tab-history" class="tab-content hidden">
       <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
         <div>
@@ -400,7 +419,6 @@
             <p>• Session initialisée sur PDORegul v1.8.1.2</p>
           </div>
         </div>
-        <!-- Mention Flex -->
         <p style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 20px;">designed by transdev_stas and Google Gemini in September 2026</p>
       </div>
     </div>
@@ -409,7 +427,7 @@
 
 </div>
 
-<!-- BARRE DE NAVIGATION FIXE (Fond blanc, onglet actif en case bleue avec icônes blanches) -->
+<!-- BARRE DE NAVIGATION FIXE -->
 <div id="main-nav-bar" class="nav-bar hidden">
   <button class="nav-item" onclick="switchTab('chat')">
     <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -597,7 +615,6 @@
   let isManualFallbackActive = false;
   let isManualPlanningFallbackActive = false;
 
-  // Système de gestion des onglets
   function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -725,7 +742,6 @@
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
-    // Gestion affichage du plan PDF pour tous
     const planStatusTxt = document.getElementById('plan-status-txt');
     const planDownloadLink = document.getElementById('plan-download-link');
     if (state.pdfData) {
@@ -922,10 +938,18 @@
     render();
   }
 
+  // Connexion avec le faux loader de 3 secondes
   document.getElementById('login-btn').addEventListener('click', () => {
     const code = document.getElementById('matricule-input').value.trim();
     if (USERS[code]) {
-      loginUser(code);
+      document.getElementById('error-txt').style.display = 'none';
+      document.getElementById('fake-loader-screen').classList.remove('hidden');
+
+      setTimeout(() => {
+        document.getElementById('fake-loader-screen').classList.add('hidden');
+        loginUser(code);
+      }, 3000);
+
     } else {
       document.getElementById('error-txt').style.display = 'block';
     }
