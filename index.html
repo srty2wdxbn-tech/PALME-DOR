@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PALMEDOR V2</title>
+  <title>PALMEDOR v1.8</title>
   
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-512.png">
@@ -53,7 +53,7 @@
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
 
-    /* Barre de navigation V2 (Footer fixe) */
+    /* Barre de navigation v1.8 (Footer fixe) */
     .nav-bar {
       position: fixed;
       bottom: 0;
@@ -100,7 +100,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v2.0</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.8 (Préparation V2)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -108,7 +108,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v2.0</span>
+      <span class="login-info-badge">Info Réseau • v1.8</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -133,47 +133,26 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- ONGLET 1 : MESSAGERIE (Chat avec le PCC) -->
+    <!-- ONGLET 1 : MESSAGERIE (Bientôt V2)         -->
     <!-- ========================================== -->
     <div id="tab-chat" class="tab-content hidden">
-      <div class="card">
+      <div class="card" style="text-align: center; padding: 40px 20px;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">💬 Messagerie Directe</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Échangez en direct avec la régulation.</p>
-        
-        <div style="height: 250px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 10px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;" id="chat-messages-box">
-          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: auto; margin-bottom: auto;">Aucun message pour l'instant.</p>
-        </div>
-
-        <input type="text" id="chat-input" placeholder="Écrire un message...">
-        <button id="chat-send-btn" style="background: var(--primary);">Envoyer</button>
+        <p style="font-size: 14px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+          🚀 Cette fonctionnalité de messagerie en temps réel arrive bientôt dans la version V2 de PALMEDOR !
+        </p>
       </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- ONGLET 2 : SIGNALEMENTS (Retards & Incidents) -->
+    <!-- ONGLET 2 : SIGNALEMENTS (Bientôt V2)       -->
     <!-- ========================================== -->
     <div id="tab-signals" class="tab-content hidden">
-      <div class="card">
+      <div class="card" style="text-align: center; padding: 40px 20px;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">⚠️ Signalement d'Incident</h3>
-        
-        <label style="font-size: 12px; font-weight: bold;">Heure de l'incident</label>
-        <input type="time" id="sig-time" value="08:00">
-
-        <label style="font-size: 12px; font-weight: bold;">Tranche de Retard</label>
-        <select id="sig-delay">
-          <option value="0 min">À l'heure / Pas de retard</option>
-          <option value="+5 min">+ 5 minutes</option>
-          <option value="+10 min">+ 10 minutes</option>
-          <option value="+15 min">+ 15 minutes</option>
-          <option value="+30 min">+ 30 minutes</option>
-          <option value="+45 min">+ 45 minutes</option>
-          <option value="+1 heure">+ 1 heure ou plus</option>
-        </select>
-
-        <label style="font-size: 12px; font-weight: bold;">Cause / Précisions (Saisie libre)</label>
-        <textarea id="sig-cause" rows="3" placeholder="Ex: Panne mécanique, accident sur la voie, affluence voyageur..."></textarea>
-
-        <button id="submit-signal-btn" style="background: #f59e0b; color: white; margin-top: 5px;">Transmettre le signalement au PCC 🚨</button>
+        <p style="font-size: 14px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+          🚀 Le module de signalement rapide (retards, causes et horaires) sera disponible dans la future V2 !
+        </p>
       </div>
     </div>
 
@@ -301,13 +280,6 @@
           </div>
         </div>
 
-        <!-- Alerte Signalement en direct -->
-        <div id="regulator-signal-alert" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
-          <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 6px;">⚠️ NOUVEAU SIGNALEMENT INCIDENT</p>
-          <p style="font-size: 13px;" id="signal-details-txt"></p>
-          <button id="dismiss-signal-btn" style="background: #f59e0b; padding: 6px; margin-top: 8px; font-size: 12px;">Marquer comme traité ✓</button>
-        </div>
-
         <!-- Alerte Planning Régulateur -->
         <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
           <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
@@ -378,7 +350,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- ONGLET 4 : PLAN DU RÉSEAU (PDF / Image)    -->
+    <!-- ONGLET 4 : PLAN DU RÉSEAU                  -->
     <!-- ========================================== -->
     <div id="tab-plan" class="tab-content hidden">
       <div class="card" style="text-align: center;">
@@ -392,14 +364,14 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- ONGLET 5 : HISTORIQUE / ACTIVITÉ           -->
+    <!-- ONGLET 5 : HISTORIQUE                      -->
     <!-- ========================================== -->
     <div id="tab-history" class="tab-content hidden">
       <div class="card">
         <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique des actions de la vacation en cours.</p>
-        <div id="history-log-box" style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); min-height: 150px;">
-          <p>• Session initialisée sur PALMEDOR v2.0</p>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
+        <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); min-height: 150px;">
+          <p>• Session initialisée sur PALMEDOR v1.8</p>
         </div>
       </div>
     </div>
@@ -582,8 +554,6 @@
     driverPhoto: '',
     serviceRequest: null,
     planningRequest: null,
-    signalIncident: null,
-    chatMessages: [],
     serviceVersion: 1
   };
 
@@ -637,13 +607,42 @@
     if (data) {
       const oldRequest = state.serviceRequest;
       const oldPlanning = state.planningRequest;
-      const oldSignal = state.signalIncident;
       state = data;
       render();
 
       if (currentUser && currentUser.role === 'REGULATEUR') {
-        if (state.signalIncident && (!oldSignal || oldSignal.timestamp !== state.signalIncident.timestamp)) {
-          new Notification("⚠️ Nouvel Incident", { body: `${state.signalIncident.delay} de retard signalé.` });
+        if (state.serviceRequest && state.serviceRequest.status === 'pending') {
+          if (!oldRequest || oldRequest.timestamp !== state.serviceRequest.timestamp) {
+            new Notification("🚨 Alerte PCC", { body: "Conducteur 1942 vous demande un service !" });
+          }
+        }
+        if (state.planningRequest && state.planningRequest.status === 'pending') {
+          if (!oldPlanning || oldPlanning.timestamp !== state.planningRequest.timestamp) {
+            new Notification("🗓️ Demande de Planning", { body: "Romain demande une modification de planning !" });
+          }
+        }
+      }
+
+      if (currentUser && currentUser.role === 'CONDUCTEUR') {
+        if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
+          if (state.serviceRequest.status === 'accepted') {
+            new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
+          } else if (state.serviceRequest.status === 'refused') {
+            new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
+          }
+        }
+
+        if (oldPlanning && oldPlanning.status === 'pending' && state.planningRequest) {
+          if (state.planningRequest.status === 'accepted') {
+            new Notification("✅ Planning accepté", { body: "Votre demande de planning a été validée !" });
+          } else if (state.planningRequest.status === 'refused') {
+            new Notification("❌ Planning refusé", { body: "Votre demande de planning a été refusée." });
+          }
+        }
+
+        if (state.serviceVersion > localServiceVersion) {
+          localServiceVersion = state.serviceVersion;
+          new Notification("📄 Mise à jour de service", { body: "Votre prochaine fiche de service est disponible !" });
         }
       }
     }
@@ -717,19 +716,6 @@
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
 
-    // Signalement affiché côté régulateur
-    const sigAlert = document.getElementById('regulator-signal-alert');
-    if (state.signalIncident) {
-      sigAlert.classList.remove('hidden');
-      document.getElementById('signal-details-txt').innerHTML = `
-        • Heure : <strong>${state.signalIncident.time}</strong><br>
-        • Retard : <strong>${state.signalIncident.delay}</strong><br>
-        • Cause : <em>${state.signalIncident.cause || 'Aucune cause renseignée'}</em>
-      `;
-    } else {
-      sigAlert.classList.add('hidden');
-    }
-
     const planningAlert = document.getElementById('regulator-planning-alert');
     if (state.planningRequest && state.planningRequest.status === 'pending') {
       planningAlert.classList.remove('hidden');
@@ -748,23 +734,6 @@
       `;
     } else {
       reqBox.classList.add('hidden');
-    }
-
-    // Gestion de la boîte de messagerie (Chat)
-    const chatBox = document.getElementById('chat-messages-box');
-    if (state.chatMessages && state.chatMessages.length > 0) {
-      chatBox.innerHTML = '';
-      state.chatMessages.forEach(msg => {
-        const p = document.createElement('div');
-        p.style.fontSize = '12px';
-        p.style.padding = '6px 10px';
-        p.style.borderRadius = '6px';
-        p.style.marginBottom = '4px';
-        p.style.background = msg.sender === currentUser.name ? '#e0f2fe' : '#f1f5f9';
-        p.innerHTML = `<strong>${msg.sender} :</strong> ${msg.text}`;
-        chatBox.appendChild(p);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
@@ -904,38 +873,6 @@
     }
   });
 
-  // Envoi de signalement (Onglet Signalements)
-  document.getElementById('submit-signal-btn').addEventListener('click', () => {
-    const time = document.getElementById('sig-time').value;
-    const delay = document.getElementById('sig-delay').value;
-    const cause = document.getElementById('sig-cause').value.trim();
-
-    state.signalIncident = { time, delay, cause, timestamp: Date.now() };
-    stateRef.set(state).then(() => {
-      alert("Signalement transmis au régulateur avec succès ! ⚠️");
-      document.getElementById('sig-cause').value = '';
-    });
-  });
-
-  document.getElementById('dismiss-signal-btn').addEventListener('click', () => {
-    state.signalIncident = null;
-    stateRef.set(state);
-  });
-
-  // Envoi de message (Onglet Messagerie)
-  document.getElementById('chat-send-btn').addEventListener('click', () => {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if (!text) return;
-
-    if (!state.chatMessages) state.chatMessages = [];
-    state.chatMessages.push({ sender: currentUser.name, text, timestamp: Date.now() });
-    
-    stateRef.set(state).then(() => {
-      input.value = '';
-    });
-  });
-
   document.getElementById('planning-request-btn').addEventListener('click', () => {
     isManualPlanningFallbackActive = false;
     state.planningRequest = { status: 'pending', timestamp: Date.now() };
@@ -1022,4 +959,3 @@
 
 </body>
 </html>
-
