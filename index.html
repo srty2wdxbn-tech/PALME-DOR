@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Palme d'Or - SAEIV</title>
+  <title>PALMEDOR</title>
   
+  <!-- Configuration PWA & Icône écran d'accueil -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-512.png">
+  <meta name="theme-color" content="#0284c7">
+
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -13,7 +18,6 @@
   <style>
     :root {
       --primary: #0284c7;
-      /* Dégradé de bleu beaucoup plus prononcé et visible */
       --bg-gradient: linear-gradient(180deg, #38bdf8 0%, #bae6fd 30%, #f0f9ff 70%, #ffffff 100%);
       --card-bg: #ffffff;
       --text: #1e293b;
@@ -71,7 +75,7 @@
 
   <!-- BANDEAU D'ACTIVATION DES NOTIFICATIONS -->
   <div id="notif-banner" class="card hidden" style="background: #eff6ff; border: 1px solid #bfdbfe; text-align: center; padding: 12px; margin-bottom: 15px;">
-    <p style="font-size: 13px; color: #1e40af; margin-bottom: 8px;">Active les notifications pour être alerté en direct des prises de service et des nouvelles fiches !</p>
+    <p style="font-size: 13px; color: #1e40af; margin-bottom: 8px;">Active les notifications pour recevoir les alertes en arrière-plan !</p>
     <button id="enable-notif-btn" style="background: #2563eb; padding: 8px; font-size: 13px;">Activer les notifications 🔔</button>
   </div>
 
@@ -82,19 +86,18 @@
     </div>
     
     <div style="text-align: center;">
-      <h2 style="color: var(--primary); margin-bottom: 5px;">Palme d'Or</h2>
+      <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
       <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs</p>
       
-      <!-- Clavier numérique forcé pour le matricule -->
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
       <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
     </div>
 
     <div class="beta-card">
-      <span class="beta-badge">Phase Expérimentale • v1.2</span>
+      <span class="beta-badge">Phase Expérimentale • v1.3</span>
       <p style="font-size: 12px; color: #64748b; line-height: 1.4;">
-        Ce SAEIV est en cours de développement actif sur le réseau. Quelques perturbations ou bugs de signalement peuvent survenir en ligne. Merci pour votre indulgence ! 🚍⚡
+        Ce SAEIV intègre désormais les notifications Push en arrière-plan. Merci pour votre engagement sur le réseau ! 🚍⚡
       </p>
     </div>
   </div>
@@ -115,7 +118,7 @@
       <strong>Alerte Trafic :</strong> <span id="alert-text"></span>
     </div>
 
-    <!-- VUE CONDUCTEUR (Romain) -->
+    <!-- VUE CONDUCTEUR -->
     <div id="driver-view" class="card hidden">
       <div class="profile-card">
         <img id="driver-avatar" src="https://via.placeholder.com/150?text=Romain" alt="Romain DESVIGNES" class="avatar">
@@ -139,7 +142,6 @@
         <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
       </div>
 
-      <!-- MODULE DE PRISE DE SERVICE CONDUCTEUR -->
       <div style="border-top: 2px dashed var(--border); padding-top: 15px;">
         <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 VALIDATION DE PRISE DE SERVICE</p>
         
@@ -160,7 +162,7 @@
       </div>
     </div>
 
-    <!-- VUE RÉGULATEUR (Naatan) -->
+    <!-- VUE RÉGULATEUR -->
     <div id="regulator-view" class="card hidden">
       <div class="profile-card">
         <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
@@ -170,7 +172,6 @@
         </div>
       </div>
 
-      <!-- DEMANDES EN ATTENTE -->
       <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
         <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE PRISE DE SERVICE EN ATTENTE</p>
         <p style="font-size: 13px;" id="req-details"></p>
@@ -183,7 +184,7 @@
       <label style="font-size: 12px; font-weight: bold;">Ligne affectée</label>
       <select id="select-ligne"></select>
 
-      <label style="font-size: 12px; font-weight: bold;">Véhicule assigné (113 bus)</label>
+      <label style="font-size: 12px; font-weight: bold;">Véhicule assigné</label>
       <select id="select-bus"></select>
 
       <div style="display: flex; gap: 10px;">
@@ -212,10 +213,10 @@
       <label style="font-size: 12px; font-weight: bold;">Logo du Réseau</label>
       <input type="file" id="input-logo-file" accept="image/*" style="background: #f8fafc;">
 
-      <label style="font-size: 12px; font-weight: bold;">Photo de Naatan (Régulateur)</label>
+      <label style="font-size: 12px; font-weight: bold;">Photo de Naatan</label>
       <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
 
-      <label style="font-size: 12px; font-weight: bold;">Photo de Romain (Conducteur)</label>
+      <label style="font-size: 12px; font-weight: bold;">Photo de Romain</label>
       <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
 
       <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
@@ -239,12 +240,18 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const stateRef = db.ref('palme_dor_state');
+  const messaging = firebase.messaging();
+
+  // Enregistrement du Service Worker pour les PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('firebase-messaging-sw.js')
+      .then(reg => console.log('Service Worker enregistré avec succès:', reg.scope))
+      .catch(err => console.error('Erreur d enregistrement du Service Worker:', err));
+  }
 
   const notifBanner = document.getElementById('notif-banner');
-  if ("Notification" in window) {
-    if (Notification.permission === "default") {
-      notifBanner.classList.remove('hidden');
-    }
+  if ("Notification" in window && Notification.permission === "default") {
+    notifBanner.classList.remove('hidden');
   }
 
   document.getElementById('enable-notif-btn').addEventListener('click', async () => {
@@ -252,7 +259,17 @@
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         notifBanner.classList.add('hidden');
-        new Notification("Palme d'Or SAEIV", { body: "Notifications activées avec succès !" });
+        
+        // Récupération du Token FCM de l'appareil
+        constcurrentToken = await messaging.getToken({ 
+          vapidKey: "BP8y1SgN4qW8iX2kZ0Y_example_placeholder_vapid_key_or_omit_if_auto" // géré automatiquement par Firebase si non requis
+        }).catch(() => null);
+
+        if (savedMatricule && currentToken) {
+          db.ref(`palme_dor_tokens/${savedMatricule}`).set(currentToken);
+        }
+
+        new Notification("PALMEDOR", { body: "Notifications en arrière-plan activées avec succès !" });
       } else {
         alert("Notifications refusées dans les réglages de l'appareil.");
       }
@@ -260,18 +277,6 @@
       console.error(e);
     }
   });
-
-  function triggerLocalNotification(title, body) {
-    if ("Notification" in window && Notification.permission === "granted") {
-      try {
-        navigator.serviceWorker.ready.then(registration => {
-          registration.showNotification(title, { body: body });
-        });
-      } catch (err) {
-        new Notification(title, { body: body });
-      }
-    }
-  }
 
   const LIGNES = [
     { id: '2', nom: 'Salérin Graudegnan <> Beaulieu - Rosa Parks', badge: '2', bg: '#7dd3fc', text: '#ffffff' },
@@ -418,7 +423,7 @@
       if (currentUser && currentUser.role === 'REGULATEUR') {
         if (state.serviceRequest && state.serviceRequest.status === 'pending') {
           if (!oldRequest || oldRequest.timestamp !== state.serviceRequest.timestamp) {
-            triggerLocalNotification("🚨 Nouvelle Prise de Service", `Romain demande le véhicule ${state.serviceRequest.busNum} sur la ${state.serviceRequest.ligne}`);
+            new Notification("🚨 Nouvelle Prise de Service", { body: `Romain demande le véhicule ${state.serviceRequest.busNum} sur la ${state.serviceRequest.ligne}` });
           }
         }
       }
@@ -426,15 +431,15 @@
       if (currentUser && currentUser.role === 'CONDUCTEUR') {
         if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
           if (state.serviceRequest.status === 'accepted') {
-            triggerLocalNotification("✅ Prise de service acceptée", `Votre véhicule ${state.serviceRequest.busNum} est validé par le PCC !`);
+            new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé par le PCC !` });
           } else if (state.serviceRequest.status === 'refused') {
-            triggerLocalNotification("❌ Prise de service refusée", `Votre demande a été refusée par le régulateur.`);
+            new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
           }
         }
 
         if (state.serviceVersion > localServiceVersion) {
           localServiceVersion = state.serviceVersion;
-          triggerLocalNotification("📄 Mise à jour de service", "Votre prochaine fiche de service est disponible !");
+          new Notification("📄 Mise à jour de service", { body: "Votre prochaine fiche de service est disponible !" });
         }
       }
     }
@@ -465,7 +470,6 @@
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[0];
     
     document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
-
     document.getElementById('app-logo').src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=Palme+d%27Or';
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
