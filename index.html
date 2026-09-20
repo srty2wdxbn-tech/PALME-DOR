@@ -24,14 +24,16 @@
       --border: #e2e8f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; color-scheme: light; }
-    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 95px; background-attachment: fixed; }
+    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 105px; background-attachment: fixed; }
     
     .container { max-width: 500px; margin: 0 auto; }
     .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
     
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     .logo-img { height: 40px; max-width: 140px; object-fit: contain; }
-    .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+    
+    /* Bouton déconnexion rouge et visible */
+    .logout-btn { background: #dc2626 !important; color: white !important; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; }
     
     input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #ffffff !important; color: #1e293b !important; }
     button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
@@ -40,6 +42,7 @@
     .hidden { display: none !important; }
     .alert-box { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; }
     .profile-card { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+    .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
     
     .service-status-box { padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
     .status-pending { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
@@ -53,7 +56,7 @@
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
 
-    /* Barre de navigation surélevée et arrondie pour éviter les bords du téléphone */
+    /* Barre de navigation entièrement bleue, surélevée, avec cases blanches arrondies et icônes SVG uniformes */
     .nav-bar {
       position: fixed;
       bottom: 15px;
@@ -61,29 +64,43 @@
       right: 15px;
       max-width: 470px;
       margin: 0 auto;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      background: var(--primary);
+      border-radius: 20px;
       display: flex;
       justify-content: space-around;
-      padding: 10px 5px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      padding: 8px;
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
       z-index: 1000;
     }
     .nav-item {
-      background: none;
+      background: transparent;
       border: none;
-      color: #64748b;
-      font-size: 11px;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 600;
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: pointer;
-      width: 20%;
-      padding: 0;
+      width: 18%;
+      padding: 6px 2px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
     }
-    .nav-item span { font-size: 18px; margin-bottom: 2px; }
-    .nav-item.active { color: var(--primary); font-weight: bold; }
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--primary);
+      margin-bottom: 3px;
+    }
+    /* Case blanche aux bords arrondis pour l'élément actif */
+    .nav-item.active {
+      background: #ffffff;
+      color: var(--primary);
+    }
+    .nav-item.active svg {
+      fill: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -103,7 +120,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PDORegul</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.1</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.1.1</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -122,12 +139,17 @@
   <!-- APPLICATION PRINCIPALE -->
   <div id="app-screen" class="hidden">
     
-    <div class="card header">
-      <div style="display: flex; align-items: center; gap: 10px;">
+    <!-- En-tête enrichi -->
+    <div class="card header" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd;">
+      <div style="display: flex; align-items: center; gap: 12px;">
         <img id="app-logo" src="" alt="Logo Palme d'Or" class="logo-img">
+        <div>
+          <p style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.5px;">PCC Central</p>
+          <p style="font-size: 13px; font-weight: 700; color: #0369a1;">Réseau Palme d'Or 🚍</p>
+        </div>
       </div>
       <div>
-        <button id="logout-btn" style="padding: 4px 8px; font-size: 11px; background: #64748b;">Déconnexion</button>
+        <button id="logout-btn" class="logout-btn">Déconnexion</button>
       </div>
     </div>
 
@@ -333,19 +355,13 @@
         <div id="login-lines-checkboxes" class="checkbox-grid"></div>
 
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
-        <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
+        <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">GESTION DU RÉSEAU</p>
 
         <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
         <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
 
-        <label style="font-size: 12px; font-weight: bold;">Logo du Réseau</label>
-        <input type="file" id="input-logo-file" accept="image/*" style="background: #f8fafc;">
-
-        <label style="font-size: 12px; font-weight: bold;">Photo de Naatan</label>
-        <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
-
-        <label style="font-size: 12px; font-weight: bold;">Photo de Romain</label>
-        <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
+        <label style="font-size: 12px; font-weight: bold;">Importer le Plan du Réseau (PDF)</label>
+        <input type="file" id="input-pdf-file" accept="application/pdf" style="background: #f8fafc;">
 
         <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
       </div>
@@ -353,15 +369,15 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- ONGLET 4 : PLAN DU RÉSEAU                  -->
+    <!-- ONGLET 4 : PLAN DU RÉSEAU (PDF Dynamique)  -->
     <!-- ========================================== -->
     <div id="tab-plan" class="tab-content hidden">
       <div class="card" style="text-align: center;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">🗺️ Plan du Réseau</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Consultez les lignes et les correspondances.</p>
-        <div style="background: #f8fafc; border: 1px dashed var(--border); padding: 40px 20px; border-radius: 8px;">
-          <p style="font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px;">Plan général du réseau Palme d'Or</p>
-          <a href="#" target="_blank" style="display: inline-block; padding: 10px 15px; background: var(--primary); color: white; text-decoration: none; border-radius: 6px; font-size: 13px;">Ouvrir le Plan (PDF / Document) 📄</a>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Consultez ou téléchargez le plan officiel des lignes.</p>
+        <div id="plan-container" style="background: #f8fafc; border: 1px dashed var(--border); padding: 30px 20px; border-radius: 8px;">
+          <p id="plan-status-txt" style="font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px;">Aucun plan PDF mis en ligne pour le moment.</p>
+          <a id="plan-download-link" href="#" target="_blank" class="hidden" style="display: inline-block; padding: 10px 15px; background: var(--primary); color: white; text-decoration: none; border-radius: 6px; font-size: 13px;">📥 Télécharger / Voir le Plan PDF</a>
         </div>
       </div>
     </div>
@@ -370,12 +386,16 @@
     <!-- ONGLET 5 : HISTORIQUE                      -->
     <!-- ========================================== -->
     <div id="tab-history" class="tab-content hidden">
-      <div class="card">
-        <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
-        <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); min-height: 150px;">
-          <p>• Session initialisée sur PDORegul v1.8.1</p>
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+        <div>
+          <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
+          <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
+          <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+            <p>• Session initialisée sur PDORegul v1.8.1.1</p>
+          </div>
         </div>
+        <!-- Mention Flex -->
+        <p style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 20px;">designed by transdev_stas and Google Gemini in September 2026</p>
       </div>
     </div>
 
@@ -383,22 +403,27 @@
 
 </div>
 
-<!-- BARRE DE NAVIGATION FIXE (Flottante et surélevée) -->
+<!-- BARRE DE NAVIGATION FIXE (Entièrement bleue, icônes SVG uniformes blanches, sélection avec contour blanc) -->
 <div id="main-nav-bar" class="nav-bar hidden">
   <button class="nav-item" onclick="switchTab('chat')">
-    <span>💬</span>Messagerie
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    Messagerie
   </button>
   <button class="nav-item" onclick="switchTab('signals')">
-    <span>⚠️</span>Signalements
+    <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    Signalements
   </button>
   <button class="nav-item active" onclick="switchTab('home')">
-    <span>🏠</span>Accueil
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Accueil
   </button>
   <button class="nav-item" onclick="switchTab('plan')">
-    <span>🗺️</span>Plan PDF
+    <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.1V5l6 2.1V19z"/></svg>
+    Plan PDF
   </button>
   <button class="nav-item" onclick="switchTab('history')">
-    <span>📁</span>Historique
+    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+    Historique
   </button>
 </div>
 
@@ -553,8 +578,8 @@
     loginLines: [],
     busPhoto: '',
     logoBase64: '',
-    regulatorPhoto: '',
-    driverPhoto: '',
+    pdfData: '',
+    pdfName: '',
     serviceRequest: null,
     planningRequest: null,
     serviceVersion: 1
@@ -571,7 +596,7 @@
     document.getElementById('tab-' + tabId).classList.remove('hidden');
 
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    event.currentTarget.closest('.nav-item').classList.add('active');
   }
 
   const selectLigne = document.getElementById('select-ligne');
@@ -652,37 +677,47 @@
   });
 
   let tempBusPhoto = '';
-  let tempLogoBase64 = '';
-  let tempRegulatorPhoto = '';
-  let tempDriverPhoto = '';
+  let tempPdfData = '';
+  let tempPdfName = '';
 
-  function bindImageImport(elementId, callback) {
-    const el = document.getElementById(elementId);
-    if (el) {
-      el.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(evt) { callback(evt.target.result); };
-          reader.readAsDataURL(file);
-        }
-      });
+  document.getElementById('input-bus-photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) { tempBusPhoto = evt.target.result; };
+      reader.readAsDataURL(file);
     }
-  }
+  });
 
-  bindImageImport('input-bus-photo', val => tempBusPhoto = val);
-  bindImageImport('input-logo-file', val => tempLogoBase64 = val);
-  bindImageImport('input-regulator-photo', val => tempRegulatorPhoto = val);
-  bindImageImport('input-driver-photo', val => tempDriverPhoto = val);
+  document.getElementById('input-pdf-file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      tempPdfName = file.name;
+      const reader = new FileReader();
+      reader.onload = function(evt) { tempPdfData = evt.target.result; };
+      reader.readAsDataURL(file);
+    }
+  });
 
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
     
     document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
-    document.getElementById('app-logo').src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=PDORegul';
-    document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
-    document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
+    document.getElementById('app-logo').src = state.busPhoto || 'https://via.placeholder.com/140x40?text=PDORegul';
     
+    // Gestion affichage du plan PDF pour tous
+    const planStatusTxt = document.getElementById('plan-status-txt');
+    const planDownloadLink = document.getElementById('plan-download-link');
+    if (state.pdfData) {
+      planStatusTxt.textContent = `Plan disponible : ${state.pdfName || 'Plan_Reseau.pdf'}`;
+      planDownloadLink.href = state.pdfData;
+      planDownloadLink.download = state.pdfName || 'Plan_Reseau.pdf';
+      planDownloadLink.classList.remove('hidden');
+    } else {
+      planStatusTxt.textContent = 'Aucun plan PDF mis en ligne pour le moment.';
+      planDownloadLink.classList.add('hidden');
+    }
+
     document.getElementById('login-info-text').textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
 
     const loginBadgesContainer = document.getElementById('login-badges-container');
@@ -943,12 +978,13 @@
     state.serviceVersion = (state.serviceVersion || 1) + 1;
 
     if (tempBusPhoto) state.busPhoto = tempBusPhoto;
-    if (tempLogoBase64) state.logoBase64 = tempLogoBase64;
-    if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
-    if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
+    if (tempPdfData) {
+      state.pdfData = tempPdfData;
+      state.pdfName = tempPdfName;
+    }
 
     stateRef.set(state).then(() => {
-      alert('Modifications et badges transmis au réseau !');
+      alert('Mises à jour transmises au réseau Palme d\'Or !');
     }).catch(err => {
       alert('Erreur : ' + err.message);
     });
