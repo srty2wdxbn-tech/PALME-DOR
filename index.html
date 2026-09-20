@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,30 +8,34 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-512.png">
   <meta name="theme-color" content="#0284c7">
+  <!-- Force le mode clair au niveau du système et du navigateur -->
+  <meta name="color-scheme" content="only light">
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
 
   <style>
+    /* Forçage global du mode clair (bloque les styles sombres automatiques des smartphones) */
     :root {
+      color-scheme: light;
       --primary: #0284c7;
       --bg-gradient: linear-gradient(180deg, #38bdf8 0%, #bae6fd 30%, #f0f9ff 70%, #ffffff 100%);
       --card-bg: #ffffff;
       --text: #1e293b;
       --border: #e2e8f0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: var(--bg-gradient); color: var(--text); min-height: 100vh; padding: 15px; background-attachment: fixed; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; color-scheme: light; }
+    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; background-attachment: fixed; }
     
     .container { max-width: 500px; margin: 0 auto; }
-    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
+    .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
     
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     .logo-img { height: 40px; max-width: 140px; object-fit: contain; }
     .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
     
-    input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #ffffff !important; color: #1e293b !important; }
     button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     
     .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 14px; text-align: center; margin-right: 4px; margin-bottom: 4px; }
@@ -49,7 +53,7 @@
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
-    .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
   </style>
 </head>
 <body>
@@ -68,7 +72,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.1 (Fix)</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.2 (Mode Clair Forcé)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -76,10 +80,10 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.1</span>
+      <span class="login-info-badge">Info Réseau • v1.6.2</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
-        Module de prise de service optimisé avec badges dynamiques. 🚍⚡
+        Module de prise de service optimisé. 🚍⚡
       </p>
     </div>
   </div>
@@ -128,7 +132,7 @@
         <button id="planning-request-btn" style="background: #7c3aed; color: white;">Effectuer une demande de planning 🗓️</button>
       </div>
 
-      <div style="border-top: 2px dashed var(--border); padding-top: 15px;">
+      <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 10px;">
         <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 DEMANDE DE SERVICE</p>
         
         <div id="driver-form-container">
@@ -145,6 +149,13 @@
         </div>
 
         <div id="driver-status-display" class="hidden"></div>
+      </div>
+
+      <!-- Message spécifique pour Romain en bas de page -->
+      <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 15px; text-align: center;">
+        <p style="font-size: 12px; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
+          ⚠️ Veuillez effectuer votre demande de planning au moins 30 minutes avant votre prise de service !
+        </p>
       </div>
     </div>
 
@@ -203,7 +214,7 @@
       <div id="login-lines-checkboxes" class="checkbox-grid"></div>
 
       <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
-      <p style="font-size: 12px; font-weight: bold; color: #0284c7; margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
+      <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
 
       <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
       <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
@@ -367,7 +378,7 @@
     fin: '14:30',
     notes: 'Vérifier le matériel embarqué au dépôt.',
     alerte: '',
-    loginInfo: 'Module de prise de service optimisé avec badges dynamiques. 🚍⚡',
+    loginInfo: 'Module de prise de service optimisé. 🚍⚡',
     loginLines: [],
     busPhoto: '',
     logoBase64: '',
@@ -554,6 +565,7 @@
           statusDisplay.className = 'service-status-box status-pending';
           statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
 
+          // Fix du timer de secours (réglé sur 2 minutes = 120000 ms, ou 5 min si tu préfères)
           if (!fallbackTimer) {
             fallbackTimer = setTimeout(() => {
               if (state.serviceRequest && state.serviceRequest.status === 'pending') {
@@ -563,7 +575,7 @@
                   Nous vous invitons à effectuer la ligne de votre choix ! :)
                 `;
               }
-            }, 300000); // 300000 ms = 5 minutes exactes
+            }, 120000); // 120000 ms = 2 minutes
           }
 
         } else {
@@ -586,7 +598,6 @@
             `;
           }
 
-          // Attache l'événement au bouton de réinitialisation fraîchement créé
           setTimeout(() => {
             const resetBtn = document.getElementById('reset-request-btn');
             if (resetBtn) {
