@@ -68,7 +68,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.1</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.1 (Fix)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -203,7 +203,7 @@
       <div id="login-lines-checkboxes" class="checkbox-grid"></div>
 
       <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
-      <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
+      <p style="font-size: 12px; font-weight: bold; color: #0284c7; margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
 
       <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
       <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
@@ -567,7 +567,6 @@
           }
 
         } else {
-          // Si le statut n'est plus "pending" (accepté, refusé), on nettoie le timer de secours
           if (fallbackTimer) {
             clearTimeout(fallbackTimer);
             fallbackTimer = null;
@@ -575,11 +574,28 @@
 
           if (state.serviceRequest.status === 'accepted') {
             statusDisplay.className = 'service-status-box status-accepted';
-            statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE`;
+            statusDisplay.innerHTML = `
+              ✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE<br>
+              <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
+            `;
           } else if (state.serviceRequest.status === 'refused') {
             statusDisplay.className = 'service-status-box status-refused';
-            statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
+            statusDisplay.innerHTML = `
+              ❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE<br>
+              <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
+            `;
           }
+
+          // Attache l'événement au bouton de réinitialisation fraîchement créé
+          setTimeout(() => {
+            const resetBtn = document.getElementById('reset-request-btn');
+            if (resetBtn) {
+              resetBtn.onclick = () => {
+                state.serviceRequest = null;
+                stateRef.set(state);
+              };
+            }
+          }, 50);
         }
       }
     }
