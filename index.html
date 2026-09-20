@@ -68,18 +68,21 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.3</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.4</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
       <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
+      
+      <!-- Bouton d'urgence si les images bloquent le chargement -->
+      <button id="emergency-reset-btn" style="background: #64748b; margin-top: 15px; font-size: 11px; padding: 6px;">Réinitialiser les images en cas de blocage 🔄</button>
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.3</span>
+      <span class="login-info-badge">Info Réseau • v1.6.4</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
-        Module de prise de service optimisé avec reset synchronisé. 🚍⚡
+        Module de prise de service optimisé. 🚍⚡
       </p>
     </div>
   </div>
@@ -238,32 +241,13 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const stateRef = db.ref('palme_dor_state');
-  const messaging = firebase.messaging();
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('firebase-messaging-sw.js')
-      .then(reg => console.log('Service Worker enregistré:', reg.scope))
-      .catch(err => console.error('Erreur Service Worker:', err));
-  }
-
-  const notifBanner = document.getElementById('notif-banner');
-  if ("Notification" in window && Notification.permission === "default") {
-    notifBanner.classList.remove('hidden');
-  }
-
-  document.getElementById('enable-notif-btn').addEventListener('click', async () => {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        notifBanner.classList.add('hidden');
-        new Notification("PALMEDOR", { body: "Notifications activées !" });
-      } else {
-        alert("Notifications refusées.");
-      }
-    } catch (e) {
-      console.error(e);
+  
+  try {
+    const messaging = firebase.messaging();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('firebase-messaging-sw.js').catch(() => {});
     }
-  });
+  } catch(e) {}
 
   const LIGNES = [
     { id: '2', nom: 'Salérin Graudegnan <> Beaulieu - Rosa Parks', badge: '2', bg: '#7dd3fc', text: '#ffffff' },
@@ -367,7 +351,7 @@
     fin: '14:30',
     notes: 'Vérifier le matériel embarqué au dépôt.',
     alerte: '',
-    loginInfo: 'Module de prise de service optimisé avec reset synchronisé. 🚍⚡',
+    loginInfo: 'Module de prise de service optimisé. 🚍⚡',
     loginLines: [],
     busPhoto: '',
     logoBase64: '',
@@ -418,57 +402,30 @@
       const oldPlanning = state.planningRequest;
       state = data;
 
-      // Vérification synchrone du délai d'expiration (5 minutes = 300000 ms)
       if (state.serviceRequest && (state.serviceRequest.status === 'accepted' || state.serviceRequest.status === 'refused')) {
         if (state.serviceRequest.expiresAt && Date.now() > state.serviceRequest.expiresAt) {
           state.serviceRequest = null;
-          // Met à jour la base de données pour effacer la requête expirée pour tout le monde proprement
           stateRef.set(state);
-          return; // Interrompt pour éviter le double rendu
+          return;
         }
       }
 
       render();
-
-      if (currentUser && currentUser.role === 'REGULATEUR') {
-        if (state.serviceRequest && state.serviceRequest.status === 'pending') {
-          if (!oldRequest || oldRequest.timestamp !== state.serviceRequest.timestamp) {
-            new Notification("🚨 Alerte PCC", { body: "Conducteur 1942 vous demande un service !" });
-          }
-        }
-        if (state.planningRequest && !oldPlanning) {
-          new Notification("🗓️ Demande de Planning", { body: "Romain demande un rappel de planning !" });
-        }
-      }
-
-      if (currentUser && currentUser.role === 'CONDUCTEUR') {
-        if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
-          if (state.serviceRequest.status === 'accepted') {
-            new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
-          } else if (state.serviceRequest.status === 'refused') {
-            new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
-          }
-        }
-
-        if (state.serviceVersion > localServiceVersion) {
-          localServiceVersion = state.serviceVersion;
-          new Notification("📄 Mise à jour de service", { body: "Votre prochaine fiche de service est disponible !" });
-        }
-      }
     }
   });
 
-  // Vérification de sécurité locale toutes les 10 secondes si l'écran reste ouvert
-  setInterval(() => {
-    if (state.serviceRequest && (state.serviceRequest.status === 'accepted' || state.serviceRequest.status === 'refused')) {
-      if (state.serviceRequest.expiresAt && Date.now() > state.serviceRequest.expiresAt) {
-        state.serviceRequest = null;
-        if (currentUser && (currentUser.role === 'REGULATEUR' || currentUser.role === 'CONDUCTEUR')) {
-          stateRef.set(state);
-        }
-      }
+  document.getElementById('emergency-reset-btn').addEventListener('click', () => {
+    if (confirm("Voulez-vous réinitialiser les images et données bloquées sur Firebase ?")) {
+      state.busPhoto = '';
+      state.logoBase64 = '';
+      state.regulatorPhoto = '';
+      state.driverPhoto = '';
+      stateRef.set(state).then(() => {
+        alert("Images réinitialisées ! L'application va se recharger.");
+        location.reload();
+      });
     }
-  }, 10000);
+  });
 
   let tempBusPhoto = '';
   let tempLogoBase64 = '';
@@ -482,7 +439,14 @@
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onload = function(evt) { callback(evt.target.result); };
+          reader.onload = function(evt) { 
+            // Sécurité taille image (max ~800Ko pour éviter de saturer Firebase)
+            if(evt.target.result.length > 1000000) {
+              alert("L'image est trop lourde ! Veuillez choisir une image plus légère.");
+              return;
+            }
+            callback(evt.target.result); 
+          };
           reader.readAsDataURL(file);
         }
       });
@@ -529,14 +493,23 @@
     }
 
     const badge = document.getElementById('line-badge');
-    badge.textContent = ligne.badge;
-    badge.style.backgroundColor = ligne.bg;
-    badge.style.color = ligne.text;
+    if (badge) {
+      badge.textContent = ligne.badge;
+      badge.style.backgroundColor = ligne.bg;
+      badge.style.color = ligne.text;
+    }
 
-    document.getElementById('line-name').textContent = ligne.nom;
-    document.getElementById('bus-num').textContent = state.bus;
-    document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
-    document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
+    const lineNameEl = document.getElementById('line-name');
+    if (lineNameEl) lineNameEl.textContent = ligne.nom;
+    
+    const busNumEl = document.getElementById('bus-num');
+    if (busNumEl) busNumEl.textContent = state.bus;
+    
+    const serviceHoursEl = document.getElementById('service-hours');
+    if (serviceHoursEl) serviceHoursEl.textContent = `${state.prise} - ${state.fin}`;
+    
+    const pccNotesEl = document.getElementById('pcc-notes');
+    if (pccNotesEl) pccNotesEl.textContent = state.notes || 'Aucune consigne particulière.';
 
     const reqBox = document.getElementById('regulator-request-box');
     if (state.serviceRequest && state.serviceRequest.status === 'pending') {
@@ -552,10 +525,12 @@
     }
 
     const planningAlert = document.getElementById('regulator-planning-alert');
-    if (state.planningRequest) {
-      planningAlert.classList.remove('hidden');
-    } else {
-      planningAlert.classList.add('hidden');
+    if (planningAlert) {
+      if (state.planningRequest) {
+        planningAlert.classList.remove('hidden');
+      } else {
+        planningAlert.classList.add('hidden');
+      }
     }
 
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
@@ -563,38 +538,23 @@
       const statusDisplay = document.getElementById('driver-status-display');
 
       if (!state.serviceRequest) {
-        formContainer.classList.remove('hidden');
-        statusDisplay.classList.add('hidden');
-        if (fallbackTimer) clearTimeout(fallbackTimer);
+        if(formContainer) formContainer.classList.remove('hidden');
+        if(statusDisplay) statusDisplay.classList.add('hidden');
       } else {
-        formContainer.classList.add('hidden');
-        statusDisplay.classList.remove('hidden');
+        if(formContainer) formContainer.classList.add('hidden');
+        if(statusDisplay) {
+          statusDisplay.classList.remove('hidden');
 
-        if (state.serviceRequest.status === 'pending') {
-          statusDisplay.className = 'service-status-box status-pending';
-          statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
-
-          if (!fallbackTimer) {
-            fallbackTimer = setTimeout(() => {
-              if (state.serviceRequest && state.serviceRequest.status === 'pending') {
-                statusDisplay.className = 'service-status-box status-fallback';
-                statusDisplay.innerHTML = `
-                  ⚠️ <strong>Hmm.. Le régulateur ne semble pas disponible.</strong><br>
-                  Nous vous invitons à effectuer la ligne de votre choix ! :)
-                `;
-              }
-            }, 120000);
+          if (state.serviceRequest.status === 'pending') {
+            statusDisplay.className = 'service-status-box status-pending';
+            statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
+          } else if (state.serviceRequest.status === 'accepted') {
+            statusDisplay.className = 'service-status-box status-accepted';
+            statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTée`;
+          } else if (state.serviceRequest.status === 'refused') {
+            statusDisplay.className = 'service-status-box status-refused';
+            statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
           }
-
-        } else if (state.serviceRequest.status === 'accepted') {
-          if (fallbackTimer) clearTimeout(fallbackTimer);
-          statusDisplay.className = 'service-status-box status-accepted';
-          statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTée`;
-
-        } else if (state.serviceRequest.status === 'refused') {
-          if (fallbackTimer) clearTimeout(fallbackTimer);
-          statusDisplay.className = 'service-status-box status-refused';
-          statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
         }
       }
     }
@@ -629,7 +589,6 @@
       document.getElementById('driver-view').classList.remove('hidden');
       document.getElementById('regulator-view').classList.add('hidden');
       document.getElementById('driver-user-name').textContent = currentUser.name;
-      localServiceVersion = state.serviceVersion || 1;
     }
     render();
   }
@@ -679,7 +638,6 @@
   document.getElementById('accept-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
       state.serviceRequest.status = 'accepted';
-      // On définit une date d'expiration exacte à +5 minutes (300 000 ms)
       state.serviceRequest.expiresAt = Date.now() + 300000;
       stateRef.set(state);
     }
@@ -688,7 +646,6 @@
   document.getElementById('refuse-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
       state.serviceRequest.status = 'refused';
-      // Idem pour le refus
       state.serviceRequest.expiresAt = Date.now() + 300000;
       stateRef.set(state);
     }
@@ -699,7 +656,7 @@
     state.bus = selectBus.value;
     state.prise = document.getElementById('input-prise').value;
     state.fin = document.getElementById('input-fin').value;
-    state.notes = document.getElementById('input-notes'].value;
+    state.notes = document.getElementById('input-notes').value; // Correction du crochet de fermeture buggé
     state.alerte = document.getElementById('input-alerte').value;
     state.loginInfo = document.getElementById('input-login-info').value;
     
