@@ -542,7 +542,10 @@
       if (!state.serviceRequest) {
         formContainer.classList.remove('hidden');
         statusDisplay.classList.add('hidden');
-        if (fallbackTimer) clearTimeout(fallbackTimer);
+        if (fallbackTimer) {
+          clearTimeout(fallbackTimer);
+          fallbackTimer = null;
+        }
       } else {
         formContainer.classList.add('hidden');
         statusDisplay.classList.remove('hidden');
@@ -560,17 +563,23 @@
                   Nous vous invitons à effectuer la ligne de votre choix ! :)
                 `;
               }
-            }, 120000);
+            }, 300000); // 300000 ms = 5 minutes exactes
           }
 
-        } else if (state.serviceRequest.status === 'accepted') {
-          if (fallbackTimer) clearTimeout(fallbackTimer);
-          statusDisplay.className = 'service-status-box status-accepted';
-          statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE`;
-        } else if (state.serviceRequest.status === 'refused') {
-          if (fallbackTimer) clearTimeout(fallbackTimer);
-          statusDisplay.className = 'service-status-box status-refused';
-          statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
+        } else {
+          // Si le statut n'est plus "pending" (accepté, refusé), on nettoie le timer de secours
+          if (fallbackTimer) {
+            clearTimeout(fallbackTimer);
+            fallbackTimer = null;
+          }
+
+          if (state.serviceRequest.status === 'accepted') {
+            statusDisplay.className = 'service-status-box status-accepted';
+            statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE`;
+          } else if (state.serviceRequest.status === 'refused') {
+            statusDisplay.className = 'service-status-box status-refused';
+            statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
+          }
         }
       }
     }
