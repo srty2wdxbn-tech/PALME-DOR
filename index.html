@@ -13,8 +13,8 @@
   <style>
     :root {
       --primary: #0284c7;
-      /* Dégradé fluide de bleu clair vers le blanc de haut en bas */
-      --bg-gradient: linear-gradient(180deg, #bae6fd 0%, #f0f9ff 35%, #ffffff 100%);
+      /* Dégradé de bleu beaucoup plus prononcé et visible */
+      --bg-gradient: linear-gradient(180deg, #38bdf8 0%, #bae6fd 30%, #f0f9ff 70%, #ffffff 100%);
       --card-bg: #ffffff;
       --text: #1e293b;
       --border: #e2e8f0;
@@ -85,7 +85,8 @@
       <h2 style="color: var(--primary); margin-bottom: 5px;">Palme d'Or</h2>
       <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs</p>
       
-      <input type="password" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
+      <!-- Clavier numérique forcé pour le matricule -->
+      <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
       <p id="error-txt" style="color: #ef4444; font-size: 12px; margin-top: 10px; display: none;">Matricule incorrect.</p>
     </div>
