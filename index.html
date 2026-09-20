@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PALMEDOR</title>
+  <title>PALMEDOR V2</title>
   
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-512.png">
@@ -24,7 +24,7 @@
       --border: #e2e8f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; color-scheme: light; }
-    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; background-attachment: fixed; }
+    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 80px; background-attachment: fixed; }
     
     .container { max-width: 500px; margin: 0 auto; }
     .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
@@ -52,6 +52,35 @@
     
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
+
+    /* Barre de navigation V2 (Footer fixe) */
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+      z-index: 1000;
+    }
+    .nav-item {
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      width: 20%;
+      padding: 0;
+    }
+    .nav-item span { font-size: 18px; margin-bottom: 2px; }
+    .nav-item.active { color: var(--primary); font-weight: bold; }
   </style>
 </head>
 <body>
@@ -71,7 +100,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.4</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v2.0</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -79,7 +108,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.7.4</span>
+      <span class="login-info-badge">Info Réseau • v2.0</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -103,194 +132,299 @@
       <strong>Alerte Trafic :</strong> <span id="alert-text"></span>
     </div>
 
-    <!-- VUE CONDUCTEUR -->
-    <div id="driver-view" class="card hidden">
-      <div class="profile-card">
-        <img id="driver-avatar" src="https://via.placeholder.com/150?text=Romain" alt="Romain DESVIGNES" class="avatar">
-        <div>
-          <p style="font-size: 11px; color: #64748b; font-weight: bold;">FEUILLE DE ROUTE CONDUCTEUR</p>
-          <p id="driver-user-name" style="font-size: 15px; font-weight: bold;"></p>
-        </div>
-      </div>
-      
-      <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-        <div id="line-badge" class="badge" style="font-size: 18px; padding: 6px 12px;"></div>
-        <div>
-          <p id="line-name" style="font-weight: bold; font-size: 15px;"></p>
-          <p id="bus-num" style="font-size: 13px; color: var(--primary); font-weight: 600;"></p>
-        </div>
-      </div>
-
-      <div style="border-top: 1px solid var(--border); padding-top: 10px; font-size: 13px; margin-bottom: 15px;">
-        <p><strong>Horaires :</strong> <span id="service-hours"></span></p>
-        <p style="margin-top: 8px;"><strong>Consignes PCC :</strong></p>
-        <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
-      </div>
-
-      <!-- GESTION DU PLANNING (Bouton Violet) -->
-      <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 15px;">
-        <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">📅 GESTION DU PLANNING</p>
+    <!-- ========================================== -->
+    <!-- ONGLET 1 : MESSAGERIE (Chat avec le PCC) -->
+    <!-- ========================================== -->
+    <div id="tab-chat" class="tab-content hidden">
+      <div class="card">
+        <h3 style="color: var(--primary); margin-bottom: 10px;">💬 Messagerie Directe</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Échangez en direct avec la régulation.</p>
         
-        <div id="planning-form-container">
-          <button id="planning-request-btn" style="background: #7c3aed; color: white;">Effectuer une demande de planning 🗓️</button>
+        <div style="height: 250px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 10px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;" id="chat-messages-box">
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: auto; margin-bottom: auto;">Aucun message pour l'instant.</p>
         </div>
 
-        <div id="planning-status-display" class="hidden">
-          <div id="planning-box-pending" class="service-status-box status-pending hidden" style="border-color: #7c3aed; background: #f5f3ff; color: #6d28d9;">
-            ⏳ Demande de planning transmise... En attente du régulateur.<br>
-            <button id="manual-planning-fallback-btn" style="margin-top: 12px; background: transparent; color: #6d28d9; border: 1px solid #7c3aed; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
-              ⏱️ Pas de réponse ? Activer le mode secours planning
-            </button>
-          </div>
-
-          <div id="planning-box-fallback" class="service-status-box status-fallback hidden">
-            ⚠️ <strong>Mode secours planning activé.</strong><br>
-            Le régulateur n'est pas disponible pour le planning. Vous pouvez procéder à vos modifications !<br>
-            <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #7c3aed;">Fermer et recommencer</button>
-          </div>
-
-          <div id="planning-box-accepted" class="service-status-box status-accepted hidden">
-            ✅ Demande de planning ACCEPTÉE par le PCC<br>
-            <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
-          </div>
-
-          <div id="planning-box-refused" class="service-status-box status-refused hidden">
-            ❌ Demande de planning REFUSÉE par le PCC<br>
-            <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- DEMANDE DE SERVICE (Bouton Vert) -->
-      <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 10px;">
-        <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 DEMANDE DE SERVICE</p>
-        
-        <div id="driver-form-container">
-          <label style="font-size: 12px; font-weight: bold;">Numéro de véhicule</label>
-          <input type="number" id="driver-input-bus" placeholder="Ex: 1910">
-
-          <label style="font-size: 12px; font-weight: bold;">Ligne</label>
-          <input type="text" id="driver-input-ligne" placeholder="Ex: Ligne 2 ou C13">
-
-          <label style="font-size: 12px; font-weight: bold;">Lieu de prise de service</label>
-          <input type="text" id="driver-input-lieu" placeholder="Ex: Dépôt Principal / Gare Salérin">
-
-          <button id="submit-service-btn" style="background: #16a34a; margin-top: 5px;">Envoyer la demande au PCC</button>
-        </div>
-
-        <div id="driver-status-display" class="hidden">
-          <div id="status-box-pending" class="service-status-box status-pending hidden">
-            ⏳ Demande transmise au régulateur... En attente de validation.<br>
-            <button id="manual-fallback-btn" style="margin-top: 12px; background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
-              ⏱️ Le régulateur ne répond pas ? Cliquez ici pour choisir votre ligne
-            </button>
-          </div>
-
-          <div id="status-box-fallback" class="service-status-box status-fallback hidden">
-            ⚠️ <strong>Mode secours activé.</strong><br>
-            Le régulateur n'est pas disponible. Veuillez effectuer la ligne de votre choix ! :)<br>
-            <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
-          </div>
-
-          <div id="status-box-accepted" class="service-status-box status-accepted hidden">
-            ✅ Prise de service ACCEPTÉE<br>
-            <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
-          </div>
-
-          <div id="status-box-refused" class="service-status-box status-refused hidden">
-            ❌ Prise de service REFUSÉE<br>
-            <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Message spécifique pour Romain en bas de page -->
-      <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 15px; text-align: center;">
-        <p style="font-size: 12px; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
-          ⚠️ Veuillez effectuer votre demande de planning au moins 30 minutes avant votre prise de service !
-        </p>
+        <input type="text" id="chat-input" placeholder="Écrire un message...">
+        <button id="chat-send-btn" style="background: var(--primary);">Envoyer</button>
       </div>
     </div>
 
-    <!-- VUE RÉGULATEUR -->
-    <div id="regulator-view" class="card hidden">
-      <div class="profile-card">
-        <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
-        <div>
-          <p style="font-size: 11px; color: #64748b; font-weight: bold;">PANNEAU DE RÉGULATION (PCC)</p>
-          <p id="regulator-user-name" style="font-size: 15px; font-weight: bold;"></p>
-        </div>
-      </div>
+    <!-- ========================================== -->
+    <!-- ONGLET 2 : SIGNALEMENTS (Retards & Incidents) -->
+    <!-- ========================================== -->
+    <div id="tab-signals" class="tab-content hidden">
+      <div class="card">
+        <h3 style="color: var(--primary); margin-bottom: 10px;">⚠️ Signalement d'Incident</h3>
+        
+        <label style="font-size: 12px; font-weight: bold;">Heure de l'incident</label>
+        <input type="time" id="sig-time" value="08:00">
 
-      <!-- Alerte Planning Régulateur -->
-      <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
-        <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
-        <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
-        <div style="display: flex; gap: 10px;">
-          <button id="accept-planning-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
-          <button id="refuse-planning-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
-        </div>
-      </div>
+        <label style="font-size: 12px; font-weight: bold;">Tranche de Retard</label>
+        <select id="sig-delay">
+          <option value="0 min">À l'heure / Pas de retard</option>
+          <option value="+5 min">+ 5 minutes</option>
+          <option value="+10 min">+ 10 minutes</option>
+          <option value="+15 min">+ 15 minutes</option>
+          <option value="+30 min">+ 30 minutes</option>
+          <option value="+45 min">+ 45 minutes</option>
+          <option value="+1 heure">+ 1 heure ou plus</option>
+        </select>
 
-      <!-- Alerte Service Régulateur -->
-      <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
-        <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
-        <p style="font-size: 13px;" id="req-details"></p>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-          <button id="accept-req-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
-          <button id="refuse-req-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
-        </div>
+        <label style="font-size: 12px; font-weight: bold;">Cause / Précisions (Saisie libre)</label>
+        <textarea id="sig-cause" rows="3" placeholder="Ex: Panne mécanique, accident sur la voie, affluence voyageur..."></textarea>
+
+        <button id="submit-signal-btn" style="background: #f59e0b; color: white; margin-top: 5px;">Transmettre le signalement au PCC 🚨</button>
       </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ONGLET 3 : ACCUEIL / FEUILLE DE ROUTE      -->
+    <!-- ========================================== -->
+    <div id="tab-home" class="tab-content">
       
-      <label style="font-size: 12px; font-weight: bold;">Ligne affectée</label>
-      <select id="select-ligne"></select>
-
-      <label style="font-size: 12px; font-weight: bold;">Véhicule assigné</label>
-      <select id="select-bus"></select>
-
-      <div style="display: flex; gap: 10px;">
-        <div style="flex: 1;">
-          <label style="font-size: 12px; font-weight: bold;">Prise</label>
-          <input type="text" id="input-prise" value="06:15">
+      <!-- VUE CONDUCTEUR -->
+      <div id="driver-view" class="card hidden">
+        <div class="profile-card">
+          <img id="driver-avatar" src="https://via.placeholder.com/150?text=Romain" alt="Romain DESVIGNES" class="avatar">
+          <div>
+            <p style="font-size: 11px; color: #64748b; font-weight: bold;">FEUILLE DE ROUTE CONDUCTEUR</p>
+            <p id="driver-user-name" style="font-size: 15px; font-weight: bold;"></p>
+          </div>
         </div>
-        <div style="flex: 1;">
-          <label style="font-size: 12px; font-weight: bold;">Fin</label>
-          <input type="text" id="input-fin" value="14:30">
+        
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+          <div id="line-badge" class="badge" style="font-size: 18px; padding: 6px 12px;"></div>
+          <div>
+            <p id="line-name" style="font-weight: bold; font-size: 15px;"></p>
+            <p id="bus-num" style="font-size: 13px; color: var(--primary); font-weight: 600;"></p>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 10px; font-size: 13px; margin-bottom: 15px;">
+          <p><strong>Horaires :</strong> <span id="service-hours"></span></p>
+          <p style="margin-top: 8px;"><strong>Consignes PCC :</strong></p>
+          <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
+        </div>
+
+        <!-- GESTION DU PLANNING (Bouton Violet) -->
+        <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 15px;">
+          <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">📅 GESTION DU PLANNING</p>
+          
+          <div id="planning-form-container">
+            <button id="planning-request-btn" style="background: #7c3aed; color: white;">Effectuer une demande de planning 🗓️</button>
+          </div>
+
+          <div id="planning-status-display" class="hidden">
+            <div id="planning-box-pending" class="service-status-box status-pending hidden" style="border-color: #7c3aed; background: #f5f3ff; color: #6d28d9;">
+              ⏳ Demande de planning transmise... En attente du régulateur.<br>
+              <button id="manual-planning-fallback-btn" style="margin-top: 12px; background: transparent; color: #6d28d9; border: 1px solid #7c3aed; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
+                ⏱️ Pas de réponse ? Activer le mode secours planning
+              </button>
+            </div>
+
+            <div id="planning-box-fallback" class="service-status-box status-fallback hidden">
+              ⚠️ <strong>Mode secours planning activé.</strong><br>
+              Le régulateur n'est pas disponible pour le planning. Vous pouvez procéder à vos modifications !<br>
+              <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #7c3aed;">Fermer et recommencer</button>
+            </div>
+
+            <div id="planning-box-accepted" class="service-status-box status-accepted hidden">
+              ✅ Demande de planning ACCEPTÉE par le PCC<br>
+              <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
+            </div>
+
+            <div id="planning-box-refused" class="service-status-box status-refused hidden">
+              ❌ Demande de planning REFUSÉE par le PCC<br>
+              <button class="reset-planning-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEMANDE DE SERVICE (Bouton Vert) -->
+        <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-bottom: 10px;">
+          <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 DEMANDE DE SERVICE</p>
+          
+          <div id="driver-form-container">
+            <label style="font-size: 12px; font-weight: bold;">Numéro de véhicule</label>
+            <input type="number" id="driver-input-bus" placeholder="Ex: 1910">
+
+            <label style="font-size: 12px; font-weight: bold;">Ligne</label>
+            <input type="text" id="driver-input-ligne" placeholder="Ex: Ligne 2 ou C13">
+
+            <label style="font-size: 12px; font-weight: bold;">Lieu de prise de service</label>
+            <input type="text" id="driver-input-lieu" placeholder="Ex: Dépôt Principal / Gare Salérin">
+
+            <button id="submit-service-btn" style="background: #16a34a; margin-top: 5px;">Envoyer la demande au PCC</button>
+          </div>
+
+          <div id="driver-status-display" class="hidden">
+            <div id="status-box-pending" class="service-status-box status-pending hidden">
+              ⏳ Demande transmise au régulateur... En attente de validation.<br>
+              <button id="manual-fallback-btn" style="margin-top: 12px; background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
+                ⏱️ Le régulateur ne répond pas ? Cliquez ici pour choisir votre ligne
+              </button>
+            </div>
+
+            <div id="status-box-fallback" class="service-status-box status-fallback hidden">
+              ⚠️ <strong>Mode secours activé.</strong><br>
+              Le régulateur n'est pas disponible. Veuillez effectuer la ligne de votre choix ! :)<br>
+              <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
+            </div>
+
+            <div id="status-box-accepted" class="service-status-box status-accepted hidden">
+              ✅ Prise de service ACCEPTÉE<br>
+              <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #16a34a;">Fermer et refaire une demande</button>
+            </div>
+
+            <div id="status-box-refused" class="service-status-box status-refused hidden">
+              ❌ Prise de service REFUSÉE<br>
+              <button class="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #dc2626;">Fermer et refaire une demande</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message spécifique pour Romain en bas de page -->
+        <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 15px; text-align: center;">
+          <p style="font-size: 12px; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
+            ⚠️ Veuillez effectuer votre demande de planning au moins 30 minutes avant votre prise de service !
+          </p>
         </div>
       </div>
 
-      <label style="font-size: 12px; font-weight: bold;">Consignes pour Romain</label>
-      <textarea id="input-notes" rows="2">Prendre le véhicule au dépôt principal.</textarea>
+      <!-- VUE RÉGULATEUR -->
+      <div id="regulator-view" class="card hidden">
+        <div class="profile-card">
+          <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
+          <div>
+            <p style="font-size: 11px; color: #64748b; font-weight: bold;">PANNEAU DE RÉGULATION (PCC)</p>
+            <p id="regulator-user-name" style="font-size: 15px; font-weight: bold;"></p>
+          </div>
+        </div>
 
-      <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
-      <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
+        <!-- Alerte Signalement en direct -->
+        <div id="regulator-signal-alert" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
+          <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 6px;">⚠️ NOUVEAU SIGNALEMENT INCIDENT</p>
+          <p style="font-size: 13px;" id="signal-details-txt"></p>
+          <button id="dismiss-signal-btn" style="background: #f59e0b; padding: 6px; margin-top: 8px; font-size: 12px;">Marquer comme traité ✓</button>
+        </div>
 
-      <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
-      <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'accueil..."></textarea>
+        <!-- Alerte Planning Régulateur -->
+        <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
+          <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
+          <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
+          <div style="display: flex; gap: 10px;">
+            <button id="accept-planning-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
+            <button id="refuse-planning-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
+          </div>
+        </div>
 
-      <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Lignes concernées par l'Info Trafic d'accueil :</label>
-      <div id="login-lines-checkboxes" class="checkbox-grid"></div>
+        <!-- Alerte Service Régulateur -->
+        <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
+          <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
+          <p style="font-size: 13px;" id="req-details"></p>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button id="accept-req-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
+            <button id="refuse-req-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
+          </div>
+        </div>
+        
+        <label style="font-size: 12px; font-weight: bold;">Ligne affectée</label>
+        <select id="select-ligne"></select>
 
-      <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
-      <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
+        <label style="font-size: 12px; font-weight: bold;">Véhicule assigné</label>
+        <select id="select-bus"></select>
 
-      <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
-      <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
+        <div style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: bold;">Prise</label>
+            <input type="text" id="input-prise" value="06:15">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: bold;">Fin</label>
+            <input type="text" id="input-fin" value="14:30">
+          </div>
+        </div>
 
-      <label style="font-size: 12px; font-weight: bold;">Logo du Réseau</label>
-      <input type="file" id="input-logo-file" accept="image/*" style="background: #f8fafc;">
+        <label style="font-size: 12px; font-weight: bold;">Consignes pour Romain</label>
+        <textarea id="input-notes" rows="2">Prendre le véhicule au dépôt principal.</textarea>
 
-      <label style="font-size: 12px; font-weight: bold;">Photo de Naatan</label>
-      <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
+        <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
+        <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
 
-      <label style="font-size: 12px; font-weight: bold;">Photo de Romain</label>
-      <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
+        <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
+        <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'accueil..."></textarea>
 
-      <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
+        <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Lignes concernées par l'Info Trafic d'accueil :</label>
+        <div id="login-lines-checkboxes" class="checkbox-grid"></div>
+
+        <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
+        <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
+
+        <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
+        <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
+
+        <label style="font-size: 12px; font-weight: bold;">Logo du Réseau</label>
+        <input type="file" id="input-logo-file" accept="image/*" style="background: #f8fafc;">
+
+        <label style="font-size: 12px; font-weight: bold;">Photo de Naatan</label>
+        <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
+
+        <label style="font-size: 12px; font-weight: bold;">Photo de Romain</label>
+        <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
+
+        <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ONGLET 4 : PLAN DU RÉSEAU (PDF / Image)    -->
+    <!-- ========================================== -->
+    <div id="tab-plan" class="tab-content hidden">
+      <div class="card" style="text-align: center;">
+        <h3 style="color: var(--primary); margin-bottom: 10px;">🗺️ Plan du Réseau</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Consultez les lignes et les correspondances.</p>
+        <div style="background: #f8fafc; border: 1px dashed var(--border); padding: 40px 20px; border-radius: 8px;">
+          <p style="font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px;">Plan général du réseau Palme d'Or</p>
+          <a href="#" target="_blank" style="display: inline-block; padding: 10px 15px; background: var(--primary); color: white; text-decoration: none; border-radius: 6px; font-size: 13px;">Ouvrir le Plan (PDF / Document) 📄</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ONGLET 5 : HISTORIQUE / ACTIVITÉ           -->
+    <!-- ========================================== -->
+    <div id="tab-history" class="tab-content hidden">
+      <div class="card">
+        <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique des actions de la vacation en cours.</p>
+        <div id="history-log-box" style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); min-height: 150px;">
+          <p>• Session initialisée sur PALMEDOR v2.0</p>
+        </div>
+      </div>
     </div>
 
   </div>
 
+</div>
+
+<!-- BARRE DE NAVIGATION FIXE (Footer Onglets) -->
+<div id="main-nav-bar" class="nav-bar hidden">
+  <button class="nav-item" onclick="switchTab('chat')">
+    <span>💬</span>Messagerie
+  </button>
+  <button class="nav-item" onclick="switchTab('signals')">
+    <span>⚠️</span>Signalements
+  </button>
+  <button class="nav-item active" onclick="switchTab('home')">
+    <span>🏠</span>Accueil
+  </button>
+  <button class="nav-item" onclick="switchTab('plan')">
+    <span>🗺️</span>Plan PDF
+  </button>
+  <button class="nav-item" onclick="switchTab('history')">
+    <span>📁</span>Historique
+  </button>
 </div>
 
 <script>
@@ -423,11 +557,9 @@
     { num: 3240, model: "Autocar - Iveco Crossway cng" }
   ];
 
-  // On trie uniquement les véhicules à partir du 2ème élément pour garder "Aucun" tout en haut
   const aucunVehicule = FLEET_RAW.shift();
   FLEET_RAW.sort((a, b) => a.num - b.num);
   FLEET_RAW.unshift(aucunVehicule);
-
   const VEHICULES = FLEET_RAW.map(v => v.num === "Aucun" ? v.model : `${v.num} - ${v.model}`);
 
   const USERS = {
@@ -450,6 +582,8 @@
     driverPhoto: '',
     serviceRequest: null,
     planningRequest: null,
+    signalIncident: null,
+    chatMessages: [],
     serviceVersion: 1
   };
 
@@ -457,6 +591,15 @@
   let localServiceVersion = 1;
   let isManualFallbackActive = false;
   let isManualPlanningFallbackActive = false;
+
+  // Système de gestion des onglets
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
 
   const selectLigne = document.getElementById('select-ligne');
   LIGNES.forEach(l => {
@@ -494,42 +637,13 @@
     if (data) {
       const oldRequest = state.serviceRequest;
       const oldPlanning = state.planningRequest;
+      const oldSignal = state.signalIncident;
       state = data;
       render();
 
       if (currentUser && currentUser.role === 'REGULATEUR') {
-        if (state.serviceRequest && state.serviceRequest.status === 'pending') {
-          if (!oldRequest || oldRequest.timestamp !== state.serviceRequest.timestamp) {
-            new Notification("🚨 Alerte PCC", { body: "Conducteur 1942 vous demande un service !" });
-          }
-        }
-        if (state.planningRequest && state.planningRequest.status === 'pending') {
-          if (!oldPlanning || oldPlanning.timestamp !== state.planningRequest.timestamp) {
-            new Notification("🗓️ Demande de Planning", { body: "Romain demande une modification de planning !" });
-          }
-        }
-      }
-
-      if (currentUser && currentUser.role === 'CONDUCTEUR') {
-        if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
-          if (state.serviceRequest.status === 'accepted') {
-            new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
-          } else if (state.serviceRequest.status === 'refused') {
-            new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
-          }
-        }
-
-        if (oldPlanning && oldPlanning.status === 'pending' && state.planningRequest) {
-          if (state.planningRequest.status === 'accepted') {
-            new Notification("✅ Planning accepté", { body: "Votre demande de planning a été validée !" });
-          } else if (state.planningRequest.status === 'refused') {
-            new Notification("❌ Planning refusé", { body: "Votre demande de planning a été refusée." });
-          }
-        }
-
-        if (state.serviceVersion > localServiceVersion) {
-          localServiceVersion = state.serviceVersion;
-          new Notification("📄 Mise à jour de service", { body: "Votre prochaine fiche de service est disponible !" });
+        if (state.signalIncident && (!oldSignal || oldSignal.timestamp !== state.signalIncident.timestamp)) {
+          new Notification("⚠️ Nouvel Incident", { body: `${state.signalIncident.delay} de retard signalé.` });
         }
       }
     }
@@ -603,6 +717,19 @@
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
 
+    // Signalement affiché côté régulateur
+    const sigAlert = document.getElementById('regulator-signal-alert');
+    if (state.signalIncident) {
+      sigAlert.classList.remove('hidden');
+      document.getElementById('signal-details-txt').innerHTML = `
+        • Heure : <strong>${state.signalIncident.time}</strong><br>
+        • Retard : <strong>${state.signalIncident.delay}</strong><br>
+        • Cause : <em>${state.signalIncident.cause || 'Aucune cause renseignée'}</em>
+      `;
+    } else {
+      sigAlert.classList.add('hidden');
+    }
+
     const planningAlert = document.getElementById('regulator-planning-alert');
     if (state.planningRequest && state.planningRequest.status === 'pending') {
       planningAlert.classList.remove('hidden');
@@ -621,6 +748,23 @@
       `;
     } else {
       reqBox.classList.add('hidden');
+    }
+
+    // Gestion de la boîte de messagerie (Chat)
+    const chatBox = document.getElementById('chat-messages-box');
+    if (state.chatMessages && state.chatMessages.length > 0) {
+      chatBox.innerHTML = '';
+      state.chatMessages.forEach(msg => {
+        const p = document.createElement('div');
+        p.style.fontSize = '12px';
+        p.style.padding = '6px 10px';
+        p.style.borderRadius = '6px';
+        p.style.marginBottom = '4px';
+        p.style.background = msg.sender === currentUser.name ? '#e0f2fe' : '#f1f5f9';
+        p.innerHTML = `<strong>${msg.sender} :</strong> ${msg.text}`;
+        chatBox.appendChild(p);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
@@ -723,6 +867,7 @@
     document.getElementById('error-txt').style.display = 'none';
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
+    document.getElementById('main-nav-bar').classList.remove('hidden');
 
     if (currentUser.role === 'REGULATEUR') {
       document.getElementById('regulator-view').classList.remove('hidden');
@@ -759,12 +904,41 @@
     }
   });
 
+  // Envoi de signalement (Onglet Signalements)
+  document.getElementById('submit-signal-btn').addEventListener('click', () => {
+    const time = document.getElementById('sig-time').value;
+    const delay = document.getElementById('sig-delay').value;
+    const cause = document.getElementById('sig-cause').value.trim();
+
+    state.signalIncident = { time, delay, cause, timestamp: Date.now() };
+    stateRef.set(state).then(() => {
+      alert("Signalement transmis au régulateur avec succès ! ⚠️");
+      document.getElementById('sig-cause').value = '';
+    });
+  });
+
+  document.getElementById('dismiss-signal-btn').addEventListener('click', () => {
+    state.signalIncident = null;
+    stateRef.set(state);
+  });
+
+  // Envoi de message (Onglet Messagerie)
+  document.getElementById('chat-send-btn').addEventListener('click', () => {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!state.chatMessages) state.chatMessages = [];
+    state.chatMessages.push({ sender: currentUser.name, text, timestamp: Date.now() });
+    
+    stateRef.set(state).then(() => {
+      input.value = '';
+    });
+  });
+
   document.getElementById('planning-request-btn').addEventListener('click', () => {
     isManualPlanningFallbackActive = false;
-    state.planningRequest = {
-      status: 'pending',
-      timestamp: Date.now()
-    };
+    state.planningRequest = { status: 'pending', timestamp: Date.now() };
     stateRef.set(state);
   });
 
@@ -793,14 +967,7 @@
     }
 
     isManualFallbackActive = false;
-    state.serviceRequest = {
-      busNum: busNum,
-      ligne: ligne,
-      lieu: lieu,
-      status: 'pending',
-      timestamp: Date.now()
-    };
-
+    state.serviceRequest = { busNum, ligne, lieu, status: 'pending', timestamp: Date.now() };
     stateRef.set(state);
   });
 
@@ -855,3 +1022,4 @@
 
 </body>
 </html>
+
