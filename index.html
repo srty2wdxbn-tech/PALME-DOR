@@ -71,7 +71,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.0 (Bouton Secours)</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.1 (Fix Corrigé)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -79,7 +79,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.7.0</span>
+      <span class="login-info-badge">Info Réseau • v1.7.1</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -557,7 +557,6 @@
         statusDisplay.classList.remove('hidden');
 
         if (state.serviceRequest.status === 'pending') {
-          // Intégration du bouton de secours manuel pour Romain
           statusDisplay.className = 'service-status-box status-pending';
           statusDisplay.innerHTML = `
             ⏳ Demande transmise au régulateur... En attente de validation.<br>
@@ -577,7 +576,6 @@
                   <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
                 `;
                 
-                // Activer le bouton de réinitialisation juste après
                 setTimeout(() => {
                   const resetBtn = document.getElementById('reset-request-btn');
                   if (resetBtn) {
@@ -714,7 +712,7 @@
     state.ligneId = selectLigne.value;
     state.bus = selectBus.value;
     state.prise = document.getElementById('input-prise').value;
-    state.fin = document.getElementById('input-fin'].value;
+    state.fin = document.getElementById('input-fin').value; // <-- Correction ici (parenthèse au lieu du crochet)
     state.notes = document.getElementById('input-notes').value;
     state.alerte = document.getElementById('input-alerte').value;
     state.loginInfo = document.getElementById('input-login-info').value;
