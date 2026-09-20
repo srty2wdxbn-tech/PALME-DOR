@@ -8,7 +8,6 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-512.png">
   <meta name="theme-color" content="#0284c7">
-  <!-- Force le mode clair au niveau du système et du navigateur -->
   <meta name="color-scheme" content="only light">
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -16,7 +15,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
 
   <style>
-    /* Forçage global du mode clair (bloque les styles sombres automatiques des smartphones) */
     :root {
       color-scheme: light;
       --primary: #0284c7;
@@ -65,6 +63,7 @@
     <button id="enable-notif-btn" style="background: #2563eb; padding: 8px; font-size: 13px;">Activer les notifications 🔔</button>
   </div>
 
+  <!-- ECRAN DE CONNEXION -->
   <div id="login-screen" class="card" style="margin-top: 15px;">
     <div style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; max-height: 170px; background: #f1f5f9; border: 1px solid var(--border);">
       <img id="login-bus-img" src="https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or" alt="Réseau Palme d'Or" style="width: 100%; height: 100%; object-fit: cover;">
@@ -72,7 +71,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.4 (Fix Fallback Auto)</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.7.0 (Bouton Secours)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -80,7 +79,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.4</span>
+      <span class="login-info-badge">Info Réseau • v1.7.0</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -88,6 +87,7 @@
     </div>
   </div>
 
+  <!-- APPLICATION PRINCIPALE -->
   <div id="app-screen" class="hidden">
     
     <div class="card header">
@@ -457,13 +457,6 @@
     }
   });
 
-  // Rafraîchissement automatique toutes les 5 secondes pour déclencher le fallback des 2 minutes sans recharger
-  setInterval(() => {
-    if (currentUser && currentUser.role === 'CONDUCTEUR' && state.serviceRequest && state.serviceRequest.status === 'pending') {
-      render();
-    }
-  }, 5000);
-
   let tempBusPhoto = '';
   let tempLogoBase64 = '';
   let tempRegulatorPhoto = '';
@@ -564,20 +557,39 @@
         statusDisplay.classList.remove('hidden');
 
         if (state.serviceRequest.status === 'pending') {
-          // Vérification automatique du timestamp (120000 ms = 2 minutes)
-          const tempsEcoule = Date.now() - (state.serviceRequest.timestamp || Date.now());
-          const deuxMinutesEnMs = 120000; 
+          // Intégration du bouton de secours manuel pour Romain
+          statusDisplay.className = 'service-status-box status-pending';
+          statusDisplay.innerHTML = `
+            ⏳ Demande transmise au régulateur... En attente de validation.<br>
+            <button id="manual-fallback-btn" style="margin-top: 12px; background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
+              ⏱️ Le régulateur ne répond pas ? Cliquez ici pour choisir votre ligne
+            </button>
+          `;
 
-          if (tempsEcoule >= deuxMinutesEnMs) {
-            statusDisplay.className = 'service-status-box status-fallback';
-            statusDisplay.innerHTML = `
-              ⚠️ <strong>Hmm.. Le régulateur ne semble pas disponible.</strong><br>
-              Nous vous invitons à effectuer la ligne de votre choix ! :)
-            `;
-          } else {
-            statusDisplay.className = 'service-status-box status-pending';
-            statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
-          }
+          setTimeout(() => {
+            const fallbackBtn = document.getElementById('manual-fallback-btn');
+            if (fallbackBtn) {
+              fallbackBtn.onclick = () => {
+                statusDisplay.className = 'service-status-box status-fallback';
+                statusDisplay.innerHTML = `
+                  ⚠️ <strong>Mode secours activé.</strong><br>
+                  Le régulateur n'est pas disponible. Veuillez effectuer la ligne de votre choix ! :)<br>
+                  <button id="reset-request-btn" style="margin-top: 10px; padding: 6px; font-size: 12px; background: #475569;">Fermer et recommencer</button>
+                `;
+                
+                // Activer le bouton de réinitialisation juste après
+                setTimeout(() => {
+                  const resetBtn = document.getElementById('reset-request-btn');
+                  if (resetBtn) {
+                    resetBtn.onclick = () => {
+                      state.serviceRequest = null;
+                      stateRef.set(state);
+                    };
+                  }
+                }, 50);
+              };
+            }
+          }, 50);
 
         } else {
           if (state.serviceRequest.status === 'accepted') {
@@ -702,7 +714,7 @@
     state.ligneId = selectLigne.value;
     state.bus = selectBus.value;
     state.prise = document.getElementById('input-prise').value;
-    state.fin = document.getElementById('input-fin').value;
+    state.fin = document.getElementById('input-fin'].value;
     state.notes = document.getElementById('input-notes').value;
     state.alerte = document.getElementById('input-alerte').value;
     state.loginInfo = document.getElementById('input-login-info').value;
