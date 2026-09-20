@@ -8,6 +8,7 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
 
   <style>
     :root {
@@ -34,11 +35,23 @@
     .hidden { display: none !important; }
     .alert-box { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; }
     .profile-card { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+    
+    .service-status-box { padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
+    .status-pending { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+    .status-accepted { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
+    .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+    .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
   </style>
 </head>
 <body>
 
 <div class="container">
+
+  <!-- BANDEAU D'ACTIVATION DES NOTIFICATIONS -->
+  <div id="notif-banner" class="card hidden" style="background: #eff6ff; border: 1px solid #bfdbfe; text-align: center; padding: 12px; margin-bottom: 15px;">
+    <p style="font-size: 13px; color: #1e40af; margin-bottom: 8px;">Active les notifications pour être alerté en direct des prises de service et des nouvelles fiches !</p>
+    <button id="enable-notif-btn" style="background: #2563eb; padding: 8px; font-size: 13px;">Activer les notifications 🔔</button>
+  </div>
 
   <!-- ECRAN DE CONNEXION -->
   <div id="login-screen" class="card" style="text-align: center; margin-top: 40px;">
@@ -84,10 +97,31 @@
         </div>
       </div>
 
-      <div style="border-top: 1px solid var(--border); padding-top: 10px; font-size: 13px;">
+      <div style="border-top: 1px solid var(--border); padding-top: 10px; font-size: 13px; margin-bottom: 15px;">
         <p><strong>Horaires :</strong> <span id="service-hours"></span></p>
         <p style="margin-top: 8px;"><strong>Consignes PCC :</strong></p>
         <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
+      </div>
+
+      <!-- MODULE DE PRISE DE SERVICE CONDUCTEUR -->
+      <div style="border-top: 2px dashed var(--border); padding-top: 15px;">
+        <p style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🚌 VALIDATION DE PRISE DE SERVICE</p>
+        
+        <div id="driver-form-container">
+          <label style="font-size: 12px; font-weight: bold;">Numéro de véhicule</label>
+          <input type="number" id="driver-input-bus" placeholder="Ex: 1910">
+
+          <label style="font-size: 12px; font-weight: bold;">Ligne</label>
+          <input type="text" id="driver-input-ligne" placeholder="Ex: Ligne 2 ou C13">
+
+          <label style="font-size: 12px; font-weight: bold;">Lieu de prise de service</label>
+          <input type="text" id="driver-input-lieu" placeholder="Ex: Dépôt Principal / Gare Salérin">
+
+          <button id="submit-service-btn" style="background: #16a34a; margin-top: 5px;">Demander la validation PCC</button>
+        </div>
+
+        <!-- Statut de la demande -->
+        <div id="driver-status-display" class="hidden"></div>
       </div>
     </div>
 
@@ -98,6 +132,16 @@
         <div>
           <p style="font-size: 11px; color: #64748b; font-weight: bold;">PANNEAU DE RÉGULATION (PCC)</p>
           <p id="regulator-user-name" style="font-size: 15px; font-weight: bold;"></p>
+        </div>
+      </div>
+
+      <!-- DEMANDES EN ATTENTE -->
+      <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
+        <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE PRISE DE SERVICE EN ATTENTE</p>
+        <p style="font-size: 13px;" id="req-details"></p>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button id="accept-req-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
+          <button id="refuse-req-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
         </div>
       </div>
       
@@ -144,7 +188,6 @@
 </div>
 
 <script>
-  // CONFIGURATION FIREBASE INTÉGRÉE
   const firebaseConfig = {
     apiKey: "AIzaSyCACzjcG59VuWIGFjM2e0_fipK6hI3CXKY",
     authDomain: "espace-personnel---pdo.firebaseapp.com",
@@ -159,7 +202,41 @@
   const db = firebase.database();
   const stateRef = db.ref('palme_dor_state');
 
-  // 1. BASE DE DONNÉES DU RÉSEAU PALME D'OR
+  const notifBanner = document.getElementById('notif-banner');
+  if ("Notification" in window) {
+    if (Notification.permission === "default") {
+      notifBanner.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('enable-notif-btn').addEventListener('click', async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        notifBanner.classList.add('hidden');
+        new Notification("Palme d'Or SAEIV", {
+          body: "Notifications activées avec succès !"
+        });
+      } else {
+        alert("Notifications refusées dans les réglages de l'appareil.");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  function triggerLocalNotification(title, body) {
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(title, { body: body });
+        });
+      } catch (err) {
+        new Notification(title, { body: body });
+      }
+    }
+  }
+
   const LIGNES = [
     { id: '2', nom: 'Salérin Graudegnan <> Beaulieu - Rosa Parks', badge: '2', bg: '#7dd3fc', text: '#ffffff' },
     { id: 'C13', nom: 'MONFORT Beausoleil <> Salérin Gare', badge: 'C13', bg: '#facc15', text: '#000000' },
@@ -184,126 +261,66 @@
   ];
 
   const FLEET_RAW = [
-    { num: 1121, model: "Midibus - HeuliezBus GX137 L" },
-    { num: 1122, model: "Midibus - HeuliezBus GX137 L" },
-    { num: 1123, model: "Midibus - HeuliezBus GX137 L" },
-    { num: 1131, model: "Midibus - Heuliez GX137 ELEC" },
-    { num: 1132, model: "Midibus - Heuliez GX137 ELEC" },
-    { num: 1235, model: "Standard - Mercedes Citaro FL" },
-    { num: 1236, model: "Standard - Mercedes Citaro FL" },
-    { num: 1237, model: "Standard - Mercedes Citaro FL" },
-    { num: 1238, model: "Standard - Mercedes Citaro FL" },
-    { num: 1239, model: "Standard - Mercedes Citaro FL" },
-    { num: 1241, model: "Standard - Irisbus Citelis 12 €5" },
-    { num: 1242, model: "Standard - Irisbus Citelis 12 €5" },
-    { num: 1243, model: "Standard - Irisbus Citelis 12 €5" },
-    { num: 1251, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1252, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1253, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1254, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1255, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1256, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1257, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1258, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1259, model: "Standard - Irisbus Citelis 12 EEV" },
-    { num: 1401, model: "Standard - Setra S415 NF" },
-    { num: 1402, model: "Standard - Setra S415 NF" },
-    { num: 1403, model: "Standard - Setra S415 NF" },
-    { num: 1636, model: "Standard - Iveco UW 12 Tector" },
-    { num: 1637, model: "Standard - Iveco UW 12 Tector" },
-    { num: 1638, model: "Standard - Iveco UW 12 Tector" },
-    { num: 1639, model: "Standard - Iveco UW 12 Tector" },
-    { num: 1640, model: "Standard - Iveco UW 12 GNV" },
-    { num: 1641, model: "Standard - Iveco UW 12 GNV" },
-    { num: 1651, model: "Standard - Irisbus Crossway LE" },
-    { num: 1671, model: "Standard - Iveco Crossway LE" },
-    { num: 1672, model: "Standard - Iveco Crossway LE" },
-    { num: 1701, model: "Standard - Iveco Crossway LE GZ" },
-    { num: 1702, model: "Standard - Iveco Crossway LE GZ" },
-    { num: 1703, model: "Standard - Iveco Crossway LE GZ" },
-    { num: 1850, model: "Standard - MAN Lions City A37" },
-    { num: 1851, model: "Standard - MAN Lions City A37" },
-    { num: 1852, model: "Standard - MAN Lions City A37" },
-    { num: 1853, model: "Standard - MAN Lions City A37" },
-    { num: 1854, model: "Standard - MAN Lions City A37" },
-    { num: 1855, model: "Standard - MAN Lions City A37" },
-    { num: 1891, model: "Standard - HeuliezBus GX327" },
-    { num: 1892, model: "Standard - HeuliezBus GX327" },
-    { num: 1893, model: "Standard - HeuliezBus GX327" },
-    { num: 1894, model: "Standard - HeuliezBus GX327" },
-    { num: 1895, model: "Standard - HeuliezBus GX327" },
-    { num: 1896, model: "Standard - HeuliezBus GX327" },
-    { num: 1897, model: "Standard - HeuliezBus GX327" },
-    { num: 1902, model: "Standard - HeuliezBus GX337" },
-    { num: 1905, model: "Standard - Solaris Urbino 12" },
-    { num: 1906, model: "Standard - Solaris Urbino 12" },
-    { num: 1907, model: "Standard - Solaris Urbino 12" },
-    { num: 1908, model: "Standard - Solaris Urbino 12" },
-    { num: 1909, model: "Standard - Solaris Urbino 12" },
-    { num: 1910, model: "Standard - Mercedes Citaro C2" },
-    { num: 1911, model: "Standard - Heuliez GX337 ELEC" },
-    { num: 1912, model: "Standard - Heuliez GX337 ELEC" },
-    { num: 1913, model: "Standard - Heuliez GX337 ELEC" },
-    { num: 1914, model: "Standard - Heuliez GX337 ELEC" },
-    { num: 1915, model: "Standard - Heuliez GX337 ELEC" },
-    { num: 1921, model: "Standard - Iveco UW NF BHNS" },
-    { num: 1922, model: "Standard - Iveco UW NF BHNS" },
-    { num: 1923, model: "Standard - Iveco UW NF BHNS" },
-    { num: 1924, model: "Standard - Iveco UW NF BHNS" },
-    { num: 1925, model: "Standard - Iveco UW 12 NF" },
-    { num: 1926, model: "Standard - Iveco UW 12 NF" },
-    { num: 1301, model: "Articulé - Mercedes Citaro G" },
-    { num: 1861, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1862, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1863, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1864, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1865, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1866, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1867, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1868, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1869, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1870, model: "Articulé - Irisbus Citelis 18 EEV" },
-    { num: 1871, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1872, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1873, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1874, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1875, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1876, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1877, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1878, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1879, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1880, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1881, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1882, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 1883, model: "Articulé - Mercedes Citaro GC2" },
-    { num: 2371, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2372, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2373, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2374, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2375, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2376, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2377, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2378, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2379, model: "Articulé - Iveco UW CNG Hyb" },
-    { num: 2401, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2402, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2403, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2404, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2405, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2406, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2407, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2408, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2409, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2410, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2411, model: "Articulé - Solaris Urbino 18e" },
-    { num: 2412, model: "Articulé - Solaris Urbino 18e" },
-    { num: 3231, model: "Autocar - Mercedes Intouro L" },
-    { num: 3232, model: "Autocar - Mercedes Intouro L" },
-    { num: 3233, model: "Autocar - Mercedes Intouro L" },
-    { num: 3236, model: "Autocar - Iveco Crossway" },
-    { num: 3237, model: "Autocar - Iveco Crossway" },
-    { num: 3238, model: "Autocar - Iveco Crossway cng" },
-    { num: 3239, model: "Autocar - Iveco Crossway cng" },
+    { num: 1121, model: "Midibus - HeuliezBus GX137 L" }, { num: 1122, model: "Midibus - HeuliezBus GX137 L" },
+    { num: 1123, model: "Midibus - HeuliezBus GX137 L" }, { num: 1131, model: "Midibus - Heuliez GX137 ELEC" },
+    { num: 1132, model: "Midibus - Heuliez GX137 ELEC" }, { num: 1235, model: "Standard - Mercedes Citaro FL" },
+    { num: 1236, model: "Standard - Mercedes Citaro FL" }, { num: 1237, model: "Standard - Mercedes Citaro FL" },
+    { num: 1238, model: "Standard - Mercedes Citaro FL" }, { num: 1239, model: "Standard - Mercedes Citaro FL" },
+    { num: 1241, model: "Standard - Irisbus Citelis 12 €5" }, { num: 1242, model: "Standard - Irisbus Citelis 12 €5" },
+    { num: 1243, model: "Standard - Irisbus Citelis 12 €5" }, { num: 1251, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1252, model: "Standard - Irisbus Citelis 12 EEV" }, { num: 1253, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1254, model: "Standard - Irisbus Citelis 12 EEV" }, { num: 1255, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1256, model: "Standard - Irisbus Citelis 12 EEV" }, { num: 1257, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1258, model: "Standard - Irisbus Citelis 12 EEV" }, { num: 1259, model: "Standard - Irisbus Citelis 12 EEV" },
+    { num: 1401, model: "Standard - Setra S415 NF" }, { num: 1402, model: "Standard - Setra S415 NF" },
+    { num: 1403, model: "Standard - Setra S415 NF" }, { num: 1636, model: "Standard - Iveco UW 12 Tector" },
+    { num: 1637, model: "Standard - Iveco UW 12 Tector" }, { num: 1638, model: "Standard - Iveco UW 12 Tector" },
+    { num: 1639, model: "Standard - Iveco UW 12 Tector" }, { num: 1640, model: "Standard - Iveco UW 12 GNV" },
+    { num: 1641, model: "Standard - Iveco UW 12 GNV" }, { num: 1651, model: "Standard - Irisbus Crossway LE" },
+    { num: 1671, model: "Standard - Iveco Crossway LE" }, { num: 1672, model: "Standard - Iveco Crossway LE" },
+    { num: 1701, model: "Standard - Iveco Crossway LE GZ" }, { num: 1702, model: "Standard - Iveco Crossway LE GZ" },
+    { num: 1703, model: "Standard - Iveco Crossway LE GZ" }, { num: 1850, model: "Standard - MAN Lions City A37" },
+    { num: 1851, model: "Standard - MAN Lions City A37" }, { num: 1852, model: "Standard - MAN Lions City A37" },
+    { num: 1853, model: "Standard - MAN Lions City A37" }, { num: 1854, model: "Standard - MAN Lions City A37" },
+    { num: 1855, model: "Standard - MAN Lions City A37" }, { num: 1891, model: "Standard - HeuliezBus GX327" },
+    { num: 1892, model: "Standard - HeuliezBus GX327" }, { num: 1893, model: "Standard - HeuliezBus GX327" },
+    { num: 1894, model: "Standard - HeuliezBus GX327" }, { num: 1895, model: "Standard - HeuliezBus GX327" },
+    { num: 1896, model: "Standard - HeuliezBus GX327" }, { num: 1897, model: "Standard - HeuliezBus GX327" },
+    { num: 1902, model: "Standard - HeuliezBus GX337" }, { num: 1905, model: "Standard - Solaris Urbino 12" },
+    { num: 1906, model: "Standard - Solaris Urbino 12" }, { num: 1907, model: "Standard - Solaris Urbino 12" },
+    { num: 1908, model: "Standard - Solaris Urbino 12" }, { num: 1909, model: "Standard - Solaris Urbino 12" },
+    { num: 1910, model: "Standard - Mercedes Citaro C2" }, { num: 1911, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1912, model: "Standard - Heuliez GX337 ELEC" }, { num: 1913, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1914, model: "Standard - Heuliez GX337 ELEC" }, { num: 1915, model: "Standard - Heuliez GX337 ELEC" },
+    { num: 1921, model: "Standard - Iveco UW NF BHNS" }, { num: 1922, model: "Standard - Iveco UW NF BHNS" },
+    { num: 1923, model: "Standard - Iveco UW NF BHNS" }, { num: 1924, model: "Standard - Iveco UW NF BHNS" },
+    { num: 1925, model: "Standard - Iveco UW 12 NF" }, { num: 1926, model: "Standard - Iveco UW 12 NF" },
+    { num: 1301, model: "Articulé - Mercedes Citaro G" }, { num: 1861, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1862, model: "Articulé - Irisbus Citelis 18 EEV" }, { num: 1863, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1864, model: "Articulé - Irisbus Citelis 18 EEV" }, { num: 1865, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1866, model: "Articulé - Irisbus Citelis 18 EEV" }, { num: 1867, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1868, model: "Articulé - Irisbus Citelis 18 EEV" }, { num: 1869, model: "Articulé - Irisbus Citelis 18 EEV" },
+    { num: 1870, model: "Articulé - Irisbus Citelis 18 EEV" }, { num: 1871, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1872, model: "Articulé - Mercedes Citaro GC2" }, { num: 1873, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1874, model: "Articulé - Mercedes Citaro GC2" }, { num: 1875, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1876, model: "Articulé - Mercedes Citaro GC2" }, { num: 1877, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1878, model: "Articulé - Mercedes Citaro GC2" }, { num: 1879, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1880, model: "Articulé - Mercedes Citaro GC2" }, { num: 1881, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 1882, model: "Articulé - Mercedes Citaro GC2" }, { num: 1883, model: "Articulé - Mercedes Citaro GC2" },
+    { num: 2371, model: "Articulé - Iveco UW CNG Hyb" }, { num: 2372, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2373, model: "Articulé - Iveco UW CNG Hyb" }, { num: 2374, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2375, model: "Articulé - Iveco UW CNG Hyb" }, { num: 2376, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2377, model: "Articulé - Iveco UW CNG Hyb" }, { num: 2378, model: "Articulé - Iveco UW CNG Hyb" },
+    { num: 2379, model: "Articulé - Iveco UW CNG Hyb" }, { num: 2401, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2402, model: "Articulé - Solaris Urbino 18e" }, { num: 2403, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2404, model: "Articulé - Solaris Urbino 18e" }, { num: 2405, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2406, model: "Articulé - Solaris Urbino 18e" }, { num: 2407, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2408, model: "Articulé - Solaris Urbino 18e" }, { num: 2409, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2410, model: "Articulé - Solaris Urbino 18e" }, { num: 2411, model: "Articulé - Solaris Urbino 18e" },
+    { num: 2412, model: "Articulé - Solaris Urbino 18e" }, { num: 3231, model: "Autocar - Mercedes Intouro L" },
+    { num: 3232, model: "Autocar - Mercedes Intouro L" }, { num: 3233, model: "Autocar - Mercedes Intouro L" },
+    { num: 3236, model: "Autocar - Iveco Crossway" }, { num: 3237, model: "Autocar - Iveco Crossway" },
+    { num: 3238, model: "Autocar - Iveco Crossway cng" }, { num: 3239, model: "Autocar - Iveco Crossway cng" },
     { num: 3240, model: "Autocar - Iveco Crossway cng" }
   ];
 
@@ -324,12 +341,15 @@
     alerte: '',
     logoBase64: '',
     regulatorPhoto: '',
-    driverPhoto: ''
+    driverPhoto: '',
+    serviceRequest: null,
+    serviceVersion: 1 // Compteur de mise à jour de la fiche de service
   };
 
   let currentUser = null;
+  let fallbackTimer = null;
+  let localServiceVersion = 1;
 
-  // Remplissage des menus déroulants
   const selectLigne = document.getElementById('select-ligne');
   LIGNES.forEach(l => {
     const opt = document.createElement('option');
@@ -346,16 +366,43 @@
     selectBus.appendChild(opt);
   });
 
-  // SYNCHRONISATION EN DIRECT
   stateRef.on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
+      const oldRequest = state.serviceRequest;
+      const oldVersion = state.serviceVersion || 1;
+      
       state = data;
       render();
+
+      // Alerte pour le régulateur (Naatan) : nouvelle demande de service
+      if (currentUser && currentUser.role === 'REGULATEUR') {
+        if (state.serviceRequest && state.serviceRequest.status === 'pending') {
+          if (!oldRequest || oldRequest.timestamp !== state.serviceRequest.timestamp) {
+            triggerLocalNotification("🚨 Nouvelle Prise de Service", `Romain demande le véhicule ${state.serviceRequest.busNum} sur la ${state.serviceRequest.ligne}`);
+          }
+        }
+      }
+
+      // Alerte pour le conducteur (Romain) : validation ou refus du régulateur
+      if (currentUser && currentUser.role === 'CONDUCTEUR') {
+        if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
+          if (state.serviceRequest.status === 'accepted') {
+            triggerLocalNotification("✅ Prise de service acceptée", `Votre véhicule ${state.serviceRequest.busNum} est validé par le PCC !`);
+          } else if (state.serviceRequest.status === 'refused') {
+            triggerLocalNotification("❌ Prise de service refusée", `Votre demande a été refusée par le régulateur.`);
+          }
+        }
+
+        // NOUVEAU : Alerte pour Romain si Naatan modifie la fiche de service
+        if (state.serviceVersion > localServiceVersion) {
+          localServiceVersion = state.serviceVersion;
+          triggerLocalNotification("📄 Mise à jour de service", "Votre prochaine fiche de service est disponible !");
+        }
+      }
     }
   });
 
-  // Imports d'images
   let tempLogoBase64 = '';
   let tempRegulatorPhoto = '';
   let tempDriverPhoto = '';
@@ -378,9 +425,7 @@
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[0];
     
-    const logoImg = document.getElementById('app-logo');
-    logoImg.src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=Palme+d%27Or';
-
+    document.getElementById('app-logo').src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=Palme+d%27Or';
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
@@ -401,9 +446,61 @@
     document.getElementById('bus-num').textContent = state.bus;
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
+
+    const reqBox = document.getElementById('regulator-request-box');
+    if (state.serviceRequest && state.serviceRequest.status === 'pending') {
+      reqBox.classList.remove('hidden');
+      document.getElementById('req-details').innerHTML = `
+        <strong>Romain</strong> demande sa prise de service :<br>
+        • Véhicule : <strong>${state.serviceRequest.busNum}</strong><br>
+        • Ligne : <strong>${state.serviceRequest.ligne}</strong><br>
+        • Lieu : <strong>${state.serviceRequest.lieu}</strong>
+      `;
+    } else {
+      reqBox.classList.add('hidden');
+    }
+
+    if (currentUser && currentUser.role === 'CONDUCTEUR') {
+      const formContainer = document.getElementById('driver-form-container');
+      const statusDisplay = document.getElementById('driver-status-display');
+
+      if (!state.serviceRequest) {
+        formContainer.classList.remove('hidden');
+        statusDisplay.classList.add('hidden');
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+      } else {
+        formContainer.classList.add('hidden');
+        statusDisplay.classList.remove('hidden');
+
+        if (state.serviceRequest.status === 'pending') {
+          statusDisplay.className = 'service-status-box status-pending';
+          statusDisplay.innerHTML = '⏳ Prise de service en attente de validation par le régulateur...';
+
+          if (!fallbackTimer) {
+            fallbackTimer = setTimeout(() => {
+              if (state.serviceRequest && state.serviceRequest.status === 'pending') {
+                statusDisplay.className = 'service-status-box status-fallback';
+                statusDisplay.innerHTML = `
+                  ⚠️ <strong>Hmm.. Le régulateur ne semble pas disponible.</strong><br>
+                  Nous vous invitons à effectuer tout de même votre service. Pour tout incident, contactez le régulateur sur Discord.
+                `;
+              }
+            }, 30000);
+          }
+
+        } else if (state.serviceRequest.status === 'accepted') {
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+          statusDisplay.className = 'service-status-box status-accepted';
+          statusDisplay.innerHTML = `✅ Véhicule ${state.serviceRequest.busNum} - Prise de service ACCEPTÉE`;
+        } else if (state.serviceRequest.status === 'refused') {
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+          statusDisplay.className = 'service-status-box status-refused';
+          statusDisplay.innerHTML = `❌ Véhicule ${state.serviceRequest.busNum} - Prise de service REFUSÉE`;
+        }
+      }
+    }
   }
 
-  // Connexion
   document.getElementById('login-btn').addEventListener('click', () => {
     const code = document.getElementById('matricule-input').value.trim();
     if (USERS[code]) {
@@ -427,6 +524,7 @@
         document.getElementById('driver-view').classList.remove('hidden');
         document.getElementById('regulator-view').classList.add('hidden');
         document.getElementById('driver-user-name').textContent = currentUser.name;
+        localServiceVersion = state.serviceVersion || 1;
       }
       render();
     } else {
@@ -434,7 +532,42 @@
     }
   });
 
-  // Sauvegarde Firebase
+  document.getElementById('submit-service-btn').addEventListener('click', () => {
+    const busNum = document.getElementById('driver-input-bus').value.trim();
+    const ligne = document.getElementById('driver-input-ligne').value.trim();
+    const lieu = document.getElementById('driver-input-lieu').value.trim();
+
+    if (!busNum || !ligne || !lieu) {
+      alert('Veuillez remplir tous les champs de la prise de service.');
+      return;
+    }
+
+    state.serviceRequest = {
+      busNum: busNum,
+      ligne: ligne,
+      lieu: lieu,
+      status: 'pending',
+      timestamp: Date.now()
+    };
+
+    stateRef.set(state);
+  });
+
+  document.getElementById('accept-req-btn').addEventListener('click', () => {
+    if (state.serviceRequest) {
+      state.serviceRequest.status = 'accepted';
+      stateRef.set(state);
+    }
+  });
+
+  document.getElementById('refuse-req-btn').addEventListener('click', () => {
+    if (state.serviceRequest) {
+      state.serviceRequest.status = 'refused';
+      stateRef.set(state);
+    }
+  });
+
+  // Sauvegarde globale Régulateur : Incrémente la version pour notifier Romain
   document.getElementById('save-btn').addEventListener('click', () => {
     state.ligneId = selectLigne.value;
     state.bus = selectBus.value;
@@ -443,12 +576,15 @@
     state.notes = document.getElementById('input-notes').value;
     state.alerte = document.getElementById('input-alerte').value;
     
+    // On augmente le compteur de version de service pour déclencher la notif chez Romain
+    state.serviceVersion = (state.serviceVersion || 1) + 1;
+
     if (tempLogoBase64) state.logoBase64 = tempLogoBase64;
     if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
     if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
 
     stateRef.set(state).then(() => {
-      alert('Modifications transmises au réseau !');
+      alert('Modifications transmises au réseau et notifiées à Romain !');
     }).catch(err => {
       alert('Erreur : ' + err.message);
     });
