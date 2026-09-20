@@ -34,7 +34,7 @@
     input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
     button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     
-    .badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 16px; min-width: 45px; text-align: center; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 14px; text-align: center; margin-right: 4px; margin-bottom: 4px; }
     .hidden { display: none !important; }
     .alert-box { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; }
     .profile-card { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
@@ -45,8 +45,11 @@
     .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
     .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
 
-    .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; text-align: center; margin-top: 20px; color: #ffffff; }
+    .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; margin-top: 20px; color: #ffffff; }
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
+    .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -65,7 +68,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation & Information Voyageurs v1.6.1</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -73,9 +76,10 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6</span>
+      <span class="login-info-badge">Info Réseau • v1.6.1</span>
+      <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
-        Module de prise de service optimisé avec minuteur de secours et demande de planning. 🚍⚡
+        Module de prise de service optimisé avec badges dynamiques. 🚍⚡
       </p>
     </div>
   </div>
@@ -106,7 +110,7 @@
       </div>
       
       <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-        <div id="line-badge" class="badge"></div>
+        <div id="line-badge" class="badge" style="font-size: 18px; padding: 6px 12px;"></div>
         <div>
           <p id="line-name" style="font-weight: bold; font-size: 15px;"></p>
           <p id="bus-num" style="font-size: 13px; color: var(--primary); font-weight: 600;"></p>
@@ -193,7 +197,10 @@
       <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
 
       <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
-      <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'écran d'accueil..."></textarea>
+      <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'accueil..."></textarea>
+
+      <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Lignes concernées par l'Info Trafic d'accueil :</label>
+      <div id="login-lines-checkboxes" class="checkbox-grid"></div>
 
       <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
       <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">PERSONNALISATION DES IMAGES</p>
@@ -360,7 +367,8 @@
     fin: '14:30',
     notes: 'Vérifier le matériel embarqué au dépôt.',
     alerte: '',
-    loginInfo: 'Module de prise de service optimisé avec minuteur de secours de 2 minutes. 🚍⚡',
+    loginInfo: 'Module de prise de service optimisé avec badges dynamiques. 🚍⚡',
+    loginLines: [],
     busPhoto: '',
     logoBase64: '',
     regulatorPhoto: '',
@@ -388,6 +396,14 @@
     opt.value = v;
     opt.textContent = v;
     selectBus.appendChild(opt);
+  });
+
+  const checkboxesContainer = document.getElementById('login-lines-checkboxes');
+  LIGNES.forEach(l => {
+    const label = document.createElement('label');
+    label.className = 'checkbox-item';
+    label.innerHTML = `<input type="checkbox" value="${l.id}" class="login-line-chk"> L.${l.badge}`;
+    checkboxesContainer.appendChild(label);
   });
 
   const savedMatricule = localStorage.getItem('palme_dor_user');
@@ -464,6 +480,22 @@
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
     document.getElementById('login-info-text').textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
+
+    const loginBadgesContainer = document.getElementById('login-badges-container');
+    loginBadgesContainer.innerHTML = '';
+    if (state.loginLines && state.loginLines.length > 0) {
+      state.loginLines.forEach(lineId => {
+        const lObj = LIGNES.find(l => l.id === lineId);
+        if (lObj) {
+          const span = document.createElement('span');
+          span.className = 'badge';
+          span.textContent = lObj.badge;
+          span.style.backgroundColor = lObj.bg;
+          span.style.color = lObj.text;
+          loginBadgesContainer.appendChild(span);
+        }
+      });
+    }
 
     const alertBox = document.getElementById('alert-display');
     if (state.alerte) {
@@ -564,6 +596,11 @@
       document.getElementById('input-notes').value = state.notes;
       document.getElementById('input-alerte').value = state.alerte;
       document.getElementById('input-login-info').value = state.loginInfo || '';
+
+      const checkboxes = document.querySelectorAll('.login-line-chk');
+      checkboxes.forEach(chk => {
+        chk.checked = state.loginLines && state.loginLines.includes(chk.value);
+      });
     } else {
       document.getElementById('driver-view').classList.remove('hidden');
       document.getElementById('regulator-view').classList.add('hidden');
@@ -638,6 +675,12 @@
     state.alerte = document.getElementById('input-alerte').value;
     state.loginInfo = document.getElementById('input-login-info').value;
     
+    const selectedLines = [];
+    document.querySelectorAll('.login-line-chk:checked').forEach(chk => {
+      selectedLines.push(chk.value);
+    });
+    state.loginLines = selectedLines;
+
     state.serviceVersion = (state.serviceVersion || 1) + 1;
 
     if (tempBusPhoto) state.busPhoto = tempBusPhoto;
@@ -646,7 +689,7 @@
     if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
 
     stateRef.set(state).then(() => {
-      alert('Modifications transmises au réseau !');
+      alert('Modifications et badges transmis au réseau !');
     }).catch(err => {
       alert('Erreur : ' + err.message);
     });
