@@ -81,7 +81,64 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Barre de navigation blanche, avec l'onglet actif en case bleue aux bords arrondis */
+    /* Styles pour le plan PDF intégré et la modale plein écran */
+    .plan-wrapper {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      margin-bottom: 10px;
+    }
+    .embedded-plan {
+      width: 100%;
+      height: 100%;
+      border: none;
+      pointer-events: none;
+    }
+    .plan-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .modal-plan {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .fullscreen-pdf {
+      width: 92%;
+      height: 85%;
+      border: none;
+      border-radius: 8px;
+    }
+    #closeModal {
+      align-self: flex-end;
+      margin-right: 4%;
+      margin-bottom: 12px;
+      background: white;
+      color: #1e293b;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Barre de navigation blanche */
     .nav-bar {
       position: fixed;
       bottom: 15px;
@@ -401,10 +458,16 @@
     <div id="tab-plan" class="tab-content hidden">
       <div class="card" style="text-align: center;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">🗺️ Plan du Réseau</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Consultez ou téléchargez le plan officiel des lignes.</p>
-        <div id="plan-container" style="background: #f8fafc; border: 1px dashed var(--border); padding: 30px 20px; border-radius: 8px;">
-          <p id="plan-status-txt" style="font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px;">Aucun plan PDF mis en ligne pour le moment.</p>
-          <a id="plan-download-link" href="#" target="_blank" class="hidden" style="display: inline-block; padding: 10px 15px; background: var(--primary); color: white; text-decoration: none; border-radius: 6px; font-size: 13px;">📥 Télécharger / Voir le Plan PDF</a>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Cliquez sur le plan pour l'agrandir en grand format.</p>
+        
+        <div id="plan-container">
+          <p id="plan-status-txt" style="font-size: 13px; font-weight: bold; color: #475569; margin-bottom: 10px;">Aucun plan PDF mis en ligne pour le moment.</p>
+          
+          <!-- Plan intégré directement dans la page -->
+          <div id="plan-wrapper-box" class="plan-wrapper hidden">
+            <embed id="embedded-pdf-view" src="" type="application/pdf" class="embedded-plan" />
+            <div class="plan-overlay" id="openFullscreenPlan"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -425,6 +488,12 @@
 
   </div>
 
+</div>
+
+<!-- MODALE PLEIN ÉCRAN POUR LE PLAN -->
+<div id="fullscreenModal" class="modal-plan hidden">
+  <button id="closeModal">Fermer ✕</button>
+  <embed id="fullscreen-pdf-view" src="" type="application/pdf" class="fullscreen-pdf" />
 </div>
 
 <!-- BARRE DE NAVIGATION FIXE -->
@@ -743,15 +812,18 @@
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
     const planStatusTxt = document.getElementById('plan-status-txt');
-    const planDownloadLink = document.getElementById('plan-download-link');
+    const planWrapperBox = document.getElementById('plan-wrapper-box');
+    const embeddedPdfView = document.getElementById('embedded-pdf-view');
+    const fullscreenPdfView = document.getElementById('fullscreen-pdf-view');
+
     if (state.pdfData) {
-      planStatusTxt.textContent = `Plan disponible : ${state.pdfName || 'Plan_Reseau.pdf'}`;
-      planDownloadLink.href = state.pdfData;
-      planDownloadLink.download = state.pdfName || 'Plan_Reseau.pdf';
-      planDownloadLink.classList.remove('hidden');
+      planStatusTxt.textContent = `Plan : ${state.pdfName || 'Plan_Reseau.pdf'} (Cliquez pour agrandir)`;
+      embeddedPdfView.src = state.pdfData + "#toolbar=0&navpanes=0&scrollbar=0";
+      fullscreenPdfView.src = state.pdfData + "#toolbar=0";
+      planWrapperBox.classList.remove('hidden');
     } else {
       planStatusTxt.textContent = 'Aucun plan PDF mis en ligne pour le moment.';
-      planDownloadLink.classList.add('hidden');
+      planWrapperBox.classList.add('hidden');
     }
 
     document.getElementById('login-info-text').textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
@@ -880,6 +952,15 @@
       }
     }
   }
+
+  // Gestion de l'ouverture et fermeture de la modale plan plein écran
+  document.getElementById('openFullscreenPlan').addEventListener('click', () => {
+    document.getElementById('fullscreenModal').classList.remove('hidden');
+  });
+
+  document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('fullscreenModal').classList.add('hidden');
+  });
 
   document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'manual-fallback-btn') {
