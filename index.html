@@ -32,7 +32,6 @@
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     .logo-img { height: 40px; max-width: 140px; object-fit: contain; }
     
-    /* Bouton déconnexion rouge et visible */
     .logout-btn { background: #dc2626 !important; color: white !important; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; }
     
     input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #ffffff !important; color: #1e293b !important; }
@@ -56,7 +55,7 @@
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
 
-    /* Barre de navigation entièrement bleue, surélevée, avec cases blanches arrondies et icônes SVG uniformes */
+    /* Barre de navigation blanche, avec l'onglet actif en case bleue aux bords arrondis */
     .nav-bar {
       position: fixed;
       bottom: 15px;
@@ -64,18 +63,19 @@
       right: 15px;
       max-width: 470px;
       margin: 0 auto;
-      background: var(--primary);
+      background: #ffffff;
+      border: 1px solid var(--border);
       border-radius: 20px;
       display: flex;
       justify-content: space-around;
       padding: 8px;
-      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
       z-index: 1000;
     }
     .nav-item {
       background: transparent;
       border: none;
-      color: #ffffff;
+      color: #64748b;
       font-size: 10px;
       font-weight: 600;
       display: flex;
@@ -90,16 +90,16 @@
     .nav-item svg {
       width: 20px;
       height: 20px;
-      fill: var(--primary);
+      fill: #64748b;
       margin-bottom: 3px;
     }
-    /* Case blanche aux bords arrondis pour l'élément actif */
+    /* Case bleue aux bords arrondis pour l'élément actif */
     .nav-item.active {
-      background: #ffffff;
-      color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
     }
     .nav-item.active svg {
-      fill: var(--primary);
+      fill: #ffffff;
     }
   </style>
 </head>
@@ -120,7 +120,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PDORegul</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.1.1</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.1.2</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -355,13 +355,19 @@
         <div id="login-lines-checkboxes" class="checkbox-grid"></div>
 
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
-        <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">GESTION DU RÉSEAU</p>
+        <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">GESTION DES MÉDIAS DU RÉSEAU</p>
 
         <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
         <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
 
         <label style="font-size: 12px; font-weight: bold;">Importer le Plan du Réseau (PDF)</label>
         <input type="file" id="input-pdf-file" accept="application/pdf" style="background: #f8fafc;">
+
+        <label style="font-size: 12px; font-weight: bold;">Photo de Naatan (Régulateur)</label>
+        <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
+
+        <label style="font-size: 12px; font-weight: bold;">Photo de Romain (Conducteur)</label>
+        <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
 
         <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
       </div>
@@ -391,7 +397,7 @@
           <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
           <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
           <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
-            <p>• Session initialisée sur PDORegul v1.8.1.1</p>
+            <p>• Session initialisée sur PDORegul v1.8.1.2</p>
           </div>
         </div>
         <!-- Mention Flex -->
@@ -403,7 +409,7 @@
 
 </div>
 
-<!-- BARRE DE NAVIGATION FIXE (Entièrement bleue, icônes SVG uniformes blanches, sélection avec contour blanc) -->
+<!-- BARRE DE NAVIGATION FIXE (Fond blanc, onglet actif en case bleue avec icônes blanches) -->
 <div id="main-nav-bar" class="nav-bar hidden">
   <button class="nav-item" onclick="switchTab('chat')">
     <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -577,7 +583,8 @@
     loginInfo: 'Module de prise de service optimisé. 🚍⚡',
     loginLines: [],
     busPhoto: '',
-    logoBase64: '',
+    regulatorPhoto: '',
+    driverPhoto: '',
     pdfData: '',
     pdfName: '',
     serviceRequest: null,
@@ -677,17 +684,28 @@
   });
 
   let tempBusPhoto = '';
+  let tempRegulatorPhoto = '';
+  let tempDriverPhoto = '';
   let tempPdfData = '';
   let tempPdfName = '';
 
-  document.getElementById('input-bus-photo').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(evt) { tempBusPhoto = evt.target.result; };
-      reader.readAsDataURL(file);
+  function bindImageImport(elementId, callback) {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(evt) { callback(evt.target.result); };
+          reader.readAsDataURL(file);
+        }
+      });
     }
-  });
+  }
+
+  bindImageImport('input-bus-photo', val => tempBusPhoto = val);
+  bindImageImport('input-regulator-photo', val => tempRegulatorPhoto = val);
+  bindImageImport('input-driver-photo', val => tempDriverPhoto = val);
 
   document.getElementById('input-pdf-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -704,6 +722,8 @@
     
     document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
     document.getElementById('app-logo').src = state.busPhoto || 'https://via.placeholder.com/140x40?text=PDORegul';
+    document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
+    document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
     // Gestion affichage du plan PDF pour tous
     const planStatusTxt = document.getElementById('plan-status-txt');
@@ -978,6 +998,8 @@
     state.serviceVersion = (state.serviceVersion || 1) + 1;
 
     if (tempBusPhoto) state.busPhoto = tempBusPhoto;
+    if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
+    if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
     if (tempPdfData) {
       state.pdfData = tempPdfData;
       state.pdfName = tempPdfName;
