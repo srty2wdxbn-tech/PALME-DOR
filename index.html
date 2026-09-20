@@ -490,6 +490,9 @@
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
         <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">GESTION DES MÉDIAS DU RÉSEAU</p>
 
+        <label style="font-size: 12px; font-weight: bold; color: #7c3aed;">Logo / Image de chargement (Ouverture de l'app)</label>
+        <input type="file" id="input-splash-logo" accept="image/*" style="background: #f8fafc;">
+
         <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
         <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
 
@@ -722,6 +725,7 @@
     alerte: '',
     loginInfo: 'Module de prise de service optimisé. 🚍⚡',
     loginLines: [],
+    splashLogo: '',
     busPhoto: '',
     regulatorPhoto: '',
     driverPhoto: '',
@@ -817,6 +821,7 @@
     }
   });
 
+  let tempSplashLogo = '';
   let tempBusPhoto = '';
   let tempRegulatorPhoto = '';
   let tempDriverPhoto = '';
@@ -837,6 +842,7 @@
     }
   }
 
+  bindImageImport('input-splash-logo', val => tempSplashLogo = val);
   bindImageImport('input-bus-photo', val => tempBusPhoto = val);
   bindImageImport('input-regulator-photo', val => tempRegulatorPhoto = val);
   bindImageImport('input-driver-photo', val => tempDriverPhoto = val);
@@ -854,9 +860,9 @@
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
     
-    // Mise à jour de l'image logo réseau du Splash Screen et des écrans
+    // Dissociation propre du logo d'ouverture (splashLogo) et du bus (busPhoto)
     const defaultLogoPlaceholder = 'https://via.placeholder.com/120?text=Logo';
-    document.getElementById('splash-logo-img').src = state.busPhoto || defaultLogoPlaceholder;
+    document.getElementById('splash-logo-img').src = state.splashLogo || defaultLogoPlaceholder;
     document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
     document.getElementById('app-logo').src = state.busPhoto || 'https://via.placeholder.com/140x40?text=PDORegul';
     
@@ -1073,19 +1079,17 @@
 
   // Gestion de l'affichage initial du Splash Screen au chargement de la page
   window.addEventListener('DOMContentLoaded', () => {
-    // On attend un court moment (2 secondes) pour simuler le chargement du splash screen
     setTimeout(() => {
       const splashScreen = document.getElementById('splash-screen');
       splashScreen.style.opacity = '0';
       setTimeout(() => {
         splashScreen.style.display = 'none';
         
-        // Vérification de la session enregistrée après la disparition du splash screen
         const savedMatricule = localStorage.getItem('palme_dor_user');
         if (savedMatricule && USERS[savedMatricule]) {
           loginUser(savedMatricule);
         }
-      }, 500); // Temps de la transition fondu
+      }, 500);
     }, 2000);
   });
 
@@ -1172,6 +1176,7 @@
 
     state.serviceVersion = (state.serviceVersion || 1) + 1;
 
+    if (tempSplashLogo) state.splashLogo = tempSplashLogo;
     if (tempBusPhoto) state.busPhoto = tempBusPhoto;
     if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
     if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
