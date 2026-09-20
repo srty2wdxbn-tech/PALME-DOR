@@ -24,7 +24,7 @@
       --border: #e2e8f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; color-scheme: light; }
-    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 80px; background-attachment: fixed; }
+    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 95px; background-attachment: fixed; }
     
     .container { max-width: 500px; margin: 0 auto; }
     .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; }
@@ -53,18 +53,21 @@
     .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
     .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
 
-    /* Barre de navigation (Footer fixe) */
+    /* Barre de navigation surélevée et arrondie pour éviter les bords du téléphone */
     .nav-bar {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+      bottom: 15px;
+      left: 15px;
+      right: 15px;
+      max-width: 470px;
+      margin: 0 auto;
       background: #ffffff;
-      border-top: 1px solid var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
       display: flex;
       justify-content: space-around;
-      padding: 10px 0;
-      box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+      padding: 10px 5px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
       z-index: 1000;
     }
     .nav-item {
@@ -95,12 +98,12 @@
   <!-- ECRAN DE CONNEXION -->
   <div id="login-screen" class="card" style="margin-top: 15px;">
     <div style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; max-height: 170px; background: #f1f5f9; border: 1px solid var(--border);">
-      <img id="login-bus-img" src="https://via.placeholder.com/400x170?text=Bus+PDORegul" alt="Réseau PDORegul" style="width: 100%; height: 100%; object-fit: cover;">
+      <img id="login-bus-img" src="https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or" alt="Réseau Palme d'Or" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PDORegul</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.8</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système de Régulation • Réseau Palme d'Or v1.8.1</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -108,7 +111,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.8</span>
+      <span class="login-info-badge">Info Réseau • Palme d'Or</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -121,7 +124,7 @@
     
     <div class="card header">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <img id="app-logo" src="" alt="Logo PDORegul" class="logo-img">
+        <img id="app-logo" src="" alt="Logo Palme d'Or" class="logo-img">
       </div>
       <div>
         <button id="logout-btn" style="padding: 4px 8px; font-size: 11px; background: #64748b;">Déconnexion</button>
@@ -357,7 +360,7 @@
         <h3 style="color: var(--primary); margin-bottom: 10px;">🗺️ Plan du Réseau</h3>
         <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Consultez les lignes et les correspondances.</p>
         <div style="background: #f8fafc; border: 1px dashed var(--border); padding: 40px 20px; border-radius: 8px;">
-          <p style="font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px;">Plan général du réseau PDORegul</p>
+          <p style="font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px;">Plan général du réseau Palme d'Or</p>
           <a href="#" target="_blank" style="display: inline-block; padding: 10px 15px; background: var(--primary); color: white; text-decoration: none; border-radius: 6px; font-size: 13px;">Ouvrir le Plan (PDF / Document) 📄</a>
         </div>
       </div>
@@ -371,7 +374,7 @@
         <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
         <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
         <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); min-height: 150px;">
-          <p>• Session initialisée sur PDORegul v1.8</p>
+          <p>• Session initialisée sur PDORegul v1.8.1</p>
         </div>
       </div>
     </div>
@@ -380,7 +383,7 @@
 
 </div>
 
-<!-- BARRE DE NAVIGATION FIXE (Footer Onglets) -->
+<!-- BARRE DE NAVIGATION FIXE (Flottante et surélevée) -->
 <div id="main-nav-bar" class="nav-bar hidden">
   <button class="nav-item" onclick="switchTab('chat')">
     <span>💬</span>Messagerie
@@ -675,7 +678,7 @@
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
     
-    document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+PDORegul';
+    document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
     document.getElementById('app-logo').src = state.logoBase64 || 'https://via.placeholder.com/140x40?text=PDORegul';
     document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
     document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
