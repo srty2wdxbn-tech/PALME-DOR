@@ -72,7 +72,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.2 (Mode Clair Forcé)</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.3 (Fix Fallback)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -80,7 +80,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.2</span>
+      <span class="login-info-badge">Info Réseau • v1.6.3</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -390,7 +390,6 @@
   };
 
   let currentUser = null;
-  let fallbackTimer = null;
   let localServiceVersion = 1;
 
   const selectLigne = document.getElementById('select-ligne');
@@ -553,37 +552,27 @@
       if (!state.serviceRequest) {
         formContainer.classList.remove('hidden');
         statusDisplay.classList.add('hidden');
-        if (fallbackTimer) {
-          clearTimeout(fallbackTimer);
-          fallbackTimer = null;
-        }
       } else {
         formContainer.classList.add('hidden');
         statusDisplay.classList.remove('hidden');
 
         if (state.serviceRequest.status === 'pending') {
-          statusDisplay.className = 'service-status-box status-pending';
-          statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
+          // Utilisation du calcul de timestamp infaillible (120000 ms = 2 minutes)
+          const tempsEcoule = Date.now() - (state.serviceRequest.timestamp || Date.now());
+          const deuxMinutesEnMs = 120000; 
 
-          // Fix du timer de secours (réglé sur 2 minutes = 120000 ms, ou 5 min si tu préfères)
-          if (!fallbackTimer) {
-            fallbackTimer = setTimeout(() => {
-              if (state.serviceRequest && state.serviceRequest.status === 'pending') {
-                statusDisplay.className = 'service-status-box status-fallback';
-                statusDisplay.innerHTML = `
-                  ⚠️ <strong>Hmm.. Le régulateur ne semble pas disponible.</strong><br>
-                  Nous vous invitons à effectuer la ligne de votre choix ! :)
-                `;
-              }
-            }, 120000); // 120000 ms = 2 minutes
+          if (tempsEcoule >= deuxMinutesEnMs) {
+            statusDisplay.className = 'service-status-box status-fallback';
+            statusDisplay.innerHTML = `
+              ⚠️ <strong>Hmm.. Le régulateur ne semble pas disponible.</strong><br>
+              Nous vous invitons à effectuer la ligne de votre choix ! :)
+            `;
+          } else {
+            statusDisplay.className = 'service-status-box status-pending';
+            statusDisplay.innerHTML = '⏳ Demande transmise au régulateur... En attente de validation.';
           }
 
         } else {
-          if (fallbackTimer) {
-            clearTimeout(fallbackTimer);
-            fallbackTimer = null;
-          }
-
           if (state.serviceRequest.status === 'accepted') {
             statusDisplay.className = 'service-status-box status-accepted';
             statusDisplay.innerHTML = `
