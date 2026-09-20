@@ -72,7 +72,7 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PALMEDOR</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.3 (Fix Fallback)</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Système d'Exploitation v1.6.4 (Fix Fallback Auto)</p>
       
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
       <button id="login-btn">Connexion</button>
@@ -80,7 +80,7 @@
     </div>
 
     <div class="login-info-card">
-      <span class="login-info-badge">Info Réseau • v1.6.3</span>
+      <span class="login-info-badge">Info Réseau • v1.6.4</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
         Module de prise de service optimisé. 🚍⚡
@@ -457,6 +457,13 @@
     }
   });
 
+  // Rafraîchissement automatique toutes les 5 secondes pour déclencher le fallback des 2 minutes sans recharger
+  setInterval(() => {
+    if (currentUser && currentUser.role === 'CONDUCTEUR' && state.serviceRequest && state.serviceRequest.status === 'pending') {
+      render();
+    }
+  }, 5000);
+
   let tempBusPhoto = '';
   let tempLogoBase64 = '';
   let tempRegulatorPhoto = '';
@@ -557,7 +564,7 @@
         statusDisplay.classList.remove('hidden');
 
         if (state.serviceRequest.status === 'pending') {
-          // Utilisation du calcul de timestamp infaillible (120000 ms = 2 minutes)
+          // Vérification automatique du timestamp (120000 ms = 2 minutes)
           const tempsEcoule = Date.now() - (state.serviceRequest.timestamp || Date.now());
           const deuxMinutesEnMs = 120000; 
 
