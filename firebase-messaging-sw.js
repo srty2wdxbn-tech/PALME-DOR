@@ -13,15 +13,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// C'est cette fonction qui permet d'afficher la notification quand l'app est FERMÉE en arrière-plan
+// Gestionnaire optionnel pour intercepter les messages en arrière-plan si envoyés via FCM
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Message reçu en arrière-plan : ', payload);
-  
+  console.log('[firebase-messaging-sw.js] Message reçu en arrière-plan :', payload);
   const notificationTitle = payload.notification ? payload.notification.title : "PDORegul";
   const notificationOptions = {
     body: payload.notification ? payload.notification.body : "Nouvelle alerte du réseau",
     icon: '/icon-512.png'
   };
-
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
