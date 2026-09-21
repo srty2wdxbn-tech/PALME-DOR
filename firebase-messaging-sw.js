@@ -8,12 +8,12 @@ firebase.initializeApp({
   projectId: "espace-personnel---pdo",
   storageBucket: "espace-personnel---pdo.firebasestorage.app",
   messagingSenderId: "808450248683",
-  appId: "1:808450248683:web:10bf43e54f7796264093ae"
+  appId: "1:808450248683:web:10bf43e54f7796264093ae",
+  measurementId: "G-4WJ4QYEP88"
 });
 
 const messaging = firebase.messaging();
 
-// Gestionnaire optionnel pour intercepter les messages en arrière-plan si envoyés via FCM
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Message reçu en arrière-plan :', payload);
   const notificationTitle = payload.notification ? payload.notification.title : "PDORegul";
