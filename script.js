@@ -1,3 +1,23 @@
+// ==========================================
+// CONFIGURATION DES ALERTES DISCORD (IPHONE)
+// ==========================================
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1551679598251741324/FIa2Aeai9RSSVS4lXxb0acfEhbVKds0hQnGsSRVRH60jhscIBIzvqy7N7sa3atNsnio2";
+
+async function envoyerAlerteDiscord(titre, message) {
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: `🚨 **${titre}**\n${message}` })
+    });
+  } catch (error) {
+    console.error("Erreur réseau (Discord) :", error);
+  }
+}
+
+// ==========================================
+// CONFIGURATION FIREBASE & APPLICATION
+// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyCACzjcG59VuWIGFjM2e0_fipK6hI3CXKY",
     authDomain: "espace-personnel---pdo.firebaseapp.com",
@@ -531,6 +551,9 @@ const firebaseConfig = {
     isManualPlanningFallbackActive = false;
     state.planningRequest = { status: 'pending', timestamp: Date.now() };
     stateRef.set(state);
+    
+    // Notification Discord automatique
+    envoyerAlerteDiscord("🗓️ Demande de Planning", "Romain (Conducteur) vient de demander une modification de planning !");
   });
 
   document.getElementById('accept-planning-btn').addEventListener('click', () => {
@@ -560,6 +583,9 @@ const firebaseConfig = {
     isManualFallbackActive = false;
     state.serviceRequest = { busNum, ligne, lieu, status: 'pending', timestamp: Date.now() };
     stateRef.set(state);
+
+    // Notification Discord automatique
+    envoyerAlerteDiscord("🚍 Nouvelle Prise de Service", `Romain demande un service avec le bus ${busNum} sur la ligne ${ligne} (${lieu}).`);
   });
 
   document.getElementById('accept-req-btn').addEventListener('click', () => {
@@ -604,6 +630,13 @@ const firebaseConfig = {
 
     stateRef.set(state).then(() => {
       alert('Mises à jour transmises au réseau Palme d\'Or !');
+      
+      // Notification Discord automatique si une alerte réseau a été postée
+      if (state.alerte && state.alerte.trim() !== '') {
+        envoyerAlerteDiscord("⚠️ Alerte Réseau / PCC", state.alerte);
+      } else {
+        envoyerAlerteDiscord("📢 Mise à jour PDORegul", "Le régulateur a publié de nouvelles informations sur le réseau.");
+      }
     }).catch(err => {
       alert('Erreur : ' + err.message);
     });
