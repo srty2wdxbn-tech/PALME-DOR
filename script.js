@@ -181,7 +181,7 @@ const firebaseConfig = {
     serviceRequest: null,
     planningRequest: null,
     serviceVersion: 1,
-    messages: [] // Tableau des messages pour la messagerie en temps réel
+    messages: []
   };
 
   let currentUser = null;
@@ -503,14 +503,19 @@ const firebaseConfig = {
 
     container.innerHTML = '';
     history.forEach(item => {
+      const ligneObj = LIGNES.find(l => l.id === item.ligne) || { badge: item.ligne, bg: '#64748b', text: '#ffffff' };
+
       const div = document.createElement('div');
       div.className = 'history-item';
       div.innerHTML = `
-        <div>
-          <strong style="color: var(--primary); text-transform: capitalize;">${item.day}</strong><br>
-          <span style="font-size: 11px; color: #475569;">Ligne ${item.ligne} • ${item.bus}</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="badge" style="background-color: ${ligneObj.bg}; color: ${ligneObj.text}; font-size: 14px; padding: 4px 10px; margin-bottom: 0;">${ligneObj.badge}</span>
+          <div>
+            <strong style="color: var(--primary); text-transform: capitalize;">${item.day}</strong><br>
+            <span style="font-size: 11px; opacity: 0.7;">${item.bus}</span>
+          </div>
         </div>
-        <div style="text-align: right; font-weight: 600; color: #166534;">
+        <div style="text-align: right; font-weight: 600; color: #22c55e;">
           ${item.start} ➔ ${item.end}
         </div>
       `;
@@ -608,7 +613,14 @@ const firebaseConfig = {
     const activeServiceScreen = document.getElementById('active-service-screen');
     if (activeService) {
       activeServiceScreen.classList.remove('hidden');
-      document.getElementById('active-line-badge').textContent = activeService.ligne;
+      
+      // Application dynamique du badge coloré pour le service en cours
+      const ligneObj = LIGNES.find(l => l.id === activeService.ligne) || { badge: activeService.ligne, bg: '#22c55e', text: '#ffffff' };
+      const activeBadge = document.getElementById('active-line-badge');
+      activeBadge.textContent = ligneObj.badge;
+      activeBadge.style.backgroundColor = ligneObj.bg;
+      activeBadge.style.color = ligneObj.text;
+
       document.getElementById('active-line-name').textContent = `Ligne ${activeService.ligne}`;
       document.getElementById('active-bus-info').textContent = `${activeService.bus} • ${activeService.lieu}`;
       runActiveServiceTimer();
