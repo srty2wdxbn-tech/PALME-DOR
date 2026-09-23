@@ -192,6 +192,23 @@ const firebaseConfig = {
   let activeService = null;
   let activeServiceTimer = null;
 
+  // ==========================================
+  // GESTION DU MODE SOMBRE (DARK MODE)
+  // ==========================================
+  function initDarkMode() {
+    const savedTheme = localStorage.getItem('pdo_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  window.toggleDarkMode = function() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('pdo_theme', newTheme);
+  };
+
+  initDarkMode();
+
   function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -240,7 +257,7 @@ const firebaseConfig = {
       const oldPlanning = state.planningRequest;
       state = data;
       render();
-      renderChat(); // Met à jour le chat en temps réel dès que Firebase change
+      renderChat();
 
       if (currentUser && currentUser.role === 'REGULATEUR') {
         if (state.serviceRequest && state.serviceRequest.status === 'pending') {
@@ -347,13 +364,13 @@ const firebaseConfig = {
         font-size: 13px;
         line-height: 1.4;
         align-self: ${isMe ? 'flex-end' : 'flex-start'};
-        background: ${isMe ? '#e0f2fe' : '#ffffff'};
-        border: 1px solid ${isMe ? '#bae6fd' : 'var(--border)'};
-        color: #1e293b;
+        background: ${isMe ? 'var(--chat-bubble-me)' : 'var(--chat-bubble-other)'};
+        border: 1px solid var(--border);
+        color: var(--text);
       `;
       
       div.innerHTML = `
-        <div style="font-size: 10px; font-weight: bold; color: #0284c7; margin-bottom: 2px;">${msg.senderName}</div>
+        <div style="font-size: 10px; font-weight: bold; color: var(--primary); margin-bottom: 2px;">${msg.senderName}</div>
         <div>${msg.text}</div>
         <div style="font-size: 9px; color: #94a3b8; text-align: right; margin-top: 2px;">${msg.time}</div>
       `;
@@ -393,8 +410,6 @@ const firebaseConfig = {
 
     stateRef.set(state).then(() => {
       input.value = '';
-
-      // Détermine qui mentionner sur Discord (si Naatan écrit, ping Romain, et vice versa)
       const destinataireId = userCode === "1805" ? DISCORD_IDS["1942"] : DISCORD_IDS["1805"];
 
       envoyerAlerteDiscord(
@@ -823,7 +838,6 @@ const firebaseConfig = {
     });
   });
 
-  // Boutons Régulateur : Service propre
   document.getElementById('regulator-start-service-btn').addEventListener('click', () => {
     const l = document.getElementById('regulator-self-ligne').value.trim() || '1';
     const b = document.getElementById('regulator-self-bus').value.trim() || '1942';
@@ -835,7 +849,6 @@ const firebaseConfig = {
     alert('Prise de service PCC démarrée !');
   });
 
-  // Boutons Régulateur : Demande de Service de Romain
   document.getElementById('accept-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
       state.serviceRequest.status = 'accepted';
@@ -849,7 +862,6 @@ const firebaseConfig = {
     }
   });
 
-  // Boutons Conducteur : Demande de Service
   document.getElementById('submit-service-btn').addEventListener('click', () => {
     const busNum = document.getElementById('driver-input-bus').value.trim();
     const ligne = document.getElementById('driver-input-ligne').value.trim();
@@ -874,7 +886,6 @@ const firebaseConfig = {
     });
   });
 
-  // Boutons Régulateur : Demande de Planning de Romain
   document.getElementById('accept-planning-btn').addEventListener('click', () => {
     if (state.planningRequest) {
       state.planningRequest.status = 'accepted';
@@ -888,7 +899,6 @@ const firebaseConfig = {
     }
   });
 
-  // Boutons Conducteur : Demande de Planning
   document.getElementById('planning-request-btn').addEventListener('click', () => {
     state.planningRequest = {
       status: 'pending',
