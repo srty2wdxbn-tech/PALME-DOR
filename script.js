@@ -182,12 +182,21 @@ const firebaseConfig = {
   let isManualFallbackActive = false;
   let isManualPlanningFallbackActive = false;
 
+  // État local du service en cours (V2)
+  let activeService = null;
+  let activeServiceTimer = null;
+
   function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
 
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     event.currentTarget.closest('.nav-item').classList.add('active');
+
+    // Si on bascule sur l'historique, on actualise l'affichage
+    if (tabId === 'history' && currentUser) {
+      renderHistory();
+    }
   }
 
   const selectLigne = document.getElementById('select-ligne');
@@ -241,6 +250,12 @@ const firebaseConfig = {
         if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
           if (state.serviceRequest.status === 'accepted') {
             new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
+            // V2 : Auto-démarrage du service si accepté par la régul
+            startActiveService({
+              ligne: state.serviceRequest.ligne,
+              bus: `Bus ${state.serviceRequest.busNum}`,
+              lieu: state.serviceRequest.lieu
+            });
           } else if (state.serviceRequest.status === 'refused') {
             new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
           }
@@ -297,6 +312,107 @@ const firebaseConfig = {
       reader.readAsDataURL(file);
     }
   });
+
+  // ==========================================
+  // GESTION DU SERVICE ACTIF & HISTORIQUE (V2)
+  // ==========================================
+  function startActiveService(details) {
+    const startTime = Date.now();
+    activeService = {
+      ligne: details.ligne,
+      bus: details.bus,
+      lieu: details.lieu || 'Service PCC / Dépôt',
+      startTime: startTime,
+      startDateFormatted: new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }),
+      startTimeFormatted: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    // Sauvegarde en cours dans sessionStorage
+    sessionStorage.setItem('pdo_active_service_' + localStorage.getItem('palme_dor_user'), JSON.stringify(activeService));
+    
+    runActiveServiceTimer();
+    render();
+  }
+
+  function runActiveServiceTimer() {
+    if (activeServiceTimer) clearInterval(activeServiceTimer);
+    const sinceTxt = document.getElementById('active-since-txt');
+    if (!sinceTxt) return;
+
+    function updateTimer() {
+      if (!activeService) return;
+      const diffSec = Math.floor((Date.now() - activeService.startTime) / 1000);
+      const hours = Math.floor(diffSec / 3600);
+      const minutes = Math.floor((diffSec % 3600) / 60);
+      const seconds = diffSec % 60;
+      sinceTxt.textContent = `En service depuis ${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s (${activeService.startTimeFormatted})`;
+    }
+    updateTimer();
+    activeServiceTimer = setInterval(updateTimer, 1000);
+  }
+
+  function endActiveService() {
+    if (!activeService) return;
+    if (activeServiceTimer) clearInterval(activeServiceTimer);
+
+    const endTimeFormatted = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const completedService = {
+      day: activeService.startDateFormatted,
+      ligne: activeService.ligne,
+      bus: activeService.bus,
+      start: activeService.startTimeFormatted,
+      end: endTimeFormatted,
+      timestamp: Date.now()
+    };
+
+    // Récupération et stockage des 10 derniers services persos
+    const userCode = localStorage.getItem('palme_dor_user');
+    const storageKey = 'pdo_history_' + userCode;
+    let history = JSON.parse(localStorage.getItem(storageKey)) || [];
+    
+    history.unshift(completedService); // Ajout au début
+    if (history.length > 10) history = history.slice(0, 10); // Garder max 10
+    
+    localStorage.setItem(storageKey, JSON.stringify(history));
+
+    // Notification Discord de fin de service
+    envoyerAlerteDiscord("🛑 Fin de Service", `${currentUser.name} a terminé son service sur la ligne ${completedService.ligne} (${completedService.bus}).`);
+
+    // Reset état actif
+    activeService = null;
+    sessionStorage.removeItem('pdo_active_service_' + userCode;
+    render();
+    alert('Service terminé et enregistré dans votre onglet "Mes derniers services" !');
+  }
+
+  function renderHistory() {
+    const container = document.getElementById('history-list-container');
+    if (!container || !currentUser) return;
+
+    const userCode = localStorage.getItem('palme_dor_user');
+    const history = JSON.parse(localStorage.getItem('pdo_history_' + userCode)) || [];
+
+    if (history.length === 0) {
+      container.innerHTML = `<p style="font-size: 12px; color: #94a3b8; text-align: center; padding: 20px;">Aucun service enregistré pour le moment.</p>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    history.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <div>
+          <strong style="color: var(--primary); text-transform: capitalize;">${item.day}</strong><br>
+          <span style="font-size: 11px; color: #475569;">Ligne ${item.ligne} • ${item.bus}</span>
+        </div>
+        <div style="text-align: right; font-weight: 600; color: #166534;">
+          ${item.start} ➔ ${item.end}
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
 
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
@@ -359,6 +475,18 @@ const firebaseConfig = {
     document.getElementById('bus-num').textContent = state.bus;
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
+
+    // Gestion de l'affichage du bloc "En service actif" (V2)
+    const activeServiceScreen = document.getElementById('active-service-screen');
+    if (activeService) {
+      activeServiceScreen.classList.remove('hidden');
+      document.getElementById('active-line-badge').textContent = activeService.ligne;
+      document.getElementById('active-line-name').textContent = `Ligne ${activeService.ligne}`;
+      document.getElementById('active-bus-info').textContent = `${activeService.bus} • ${activeService.lieu}`;
+      runActiveServiceTimer();
+    } else {
+      activeServiceScreen.classList.add('hidden');
+    }
 
     const planningAlert = document.getElementById('regulator-planning-alert');
     if (state.planningRequest && state.planningRequest.status === 'pending') {
@@ -479,6 +607,11 @@ const firebaseConfig = {
       state.planningRequest = null;
       stateRef.set(state);
     }
+
+    // Gestion du clic sur "Terminer mon service" (V2)
+    if (e.target && e.target.id === 'end-service-btn') {
+      endActiveService();
+    }
   });
 
   function loginUser(code) {
@@ -489,6 +622,12 @@ const firebaseConfig = {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     document.getElementById('main-nav-bar').classList.remove('hidden');
+
+    // Restauration du service actif s'il y en avait un en cours pour cet utilisateur
+    const savedActive = sessionStorage.getItem('pdo_active_service_' + code);
+    if (savedActive) {
+      activeService = JSON.parse(savedActive);
+    }
 
     if (currentUser.role === 'REGULATEUR') {
       document.getElementById('regulator-view').classList.remove('hidden');
@@ -552,7 +691,6 @@ const firebaseConfig = {
     state.planningRequest = { status: 'pending', timestamp: Date.now() };
     stateRef.set(state);
     
-    // Notification Discord automatique
     envoyerAlerteDiscord("🗓️ Demande de Planning", "Romain (Conducteur) vient de demander une modification de planning !");
   });
 
@@ -584,7 +722,6 @@ const firebaseConfig = {
     state.serviceRequest = { busNum, ligne, lieu, status: 'pending', timestamp: Date.now() };
     stateRef.set(state);
 
-    // Notification Discord automatique
     envoyerAlerteDiscord("🚍 Nouvelle Prise de Service", `Romain demande un service avec le bus ${busNum} sur la ligne ${ligne} (${lieu}).`);
   });
 
@@ -592,6 +729,13 @@ const firebaseConfig = {
     if (state.serviceRequest) {
       state.serviceRequest.status = 'accepted';
       stateRef.set(state);
+
+      // V2 : Si la régul accepte, déclenchement direct du service actif pour Romain
+      startActiveService({
+        ligne: state.serviceRequest.ligne,
+        bus: `Bus ${state.serviceRequest.busNum}`,
+        lieu: state.serviceRequest.lieu
+      });
     }
   });
 
@@ -600,6 +744,25 @@ const firebaseConfig = {
       state.serviceRequest.status = 'refused';
       stateRef.set(state);
     }
+  });
+
+  // V2 : Action pour que Naatan (Régulateur) puisse lancer son propre service depuis l'accueil
+  document.getElementById('regulator-start-service-btn').addEventListener('click', () => {
+    const ligne = document.getElementById('regulator-self-ligne').value.trim();
+    const bus = document.getElementById('regulator-self-bus').value.trim();
+
+    if (!ligne || !bus) {
+      alert('Veuillez renseigner votre ligne et votre véhicule.');
+      return;
+    }
+
+    startActiveService({
+      ligne: ligne,
+      bus: `Bus ${bus}`,
+      lieu: 'PCC / Régulation'
+    });
+
+    envoyerAlerteDiscord("🟢 Régulation en Service", `Naatan (Régulateur) a pris son service sur la ligne ${ligne} (${bus}).`);
   });
 
   document.getElementById('save-btn').addEventListener('click', () => {
@@ -631,7 +794,6 @@ const firebaseConfig = {
     stateRef.set(state).then(() => {
       alert('Mises à jour transmises au réseau Palme d\'Or !');
       
-      // Notification Discord automatique si une alerte réseau a été postée
       if (state.alerte && state.alerte.trim() !== '') {
         envoyerAlerteDiscord("⚠️ Alerte Réseau / PCC", state.alerte);
       } else {
