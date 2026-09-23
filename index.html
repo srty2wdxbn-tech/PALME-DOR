@@ -380,11 +380,19 @@
 
     <!-- ONGLET 1 : MESSAGERIE -->
     <div id="tab-chat" class="tab-content hidden">
-      <div class="card" style="text-align: center; padding: 40px 20px;">
-        <h3 style="color: var(--primary); margin-bottom: 10px;">💬 Messagerie Directe</h3>
-        <p style="font-size: 14px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-          🚀 Bientôt disponible dans les prochaines mises à jour V2 !
-        </p>
+      <div class="card" style="display: flex; flex-direction: column; height: 420px; padding: 15px;">
+        <h3 style="color: var(--primary); margin-bottom: 10px; text-align: center;">💬 Messagerie Directe</h3>
+        
+        <!-- Zone d'affichage des messages -->
+        <div id="chat-messages-container" style="flex: 1; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: auto;">Chargement de la discussion...</p>
+        </div>
+
+        <!-- Zone de saisie -->
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="chat-input" placeholder="Écrire un message..." style="margin: 0; flex: 1;">
+          <button id="chat-send-btn" style="width: auto; padding: 0 16px; background: var(--primary);">Envoyer 🚀</button>
+        </div>
       </div>
     </div>
 
@@ -531,7 +539,7 @@
         </div>
       </div>
 
-      <!-- VUE RÉGULATEUR (ORGANISÉE EN 3 MENUS DÉROULANTS V2) -->
+      <!-- VUE RÉGULATEUR -->
       <div id="regulator-view" class="card hidden">
         <div class="profile-card">
           <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
@@ -541,7 +549,7 @@
           </div>
         </div>
 
-        <!-- Alertes en attente (Toujours visibles en haut pour réagir vite) -->
+        <!-- Alertes en attente -->
         <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
           <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
           <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
