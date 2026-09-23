@@ -26,8 +26,6 @@
       --border: #e2e8f0;
       --input-bg: #ffffff;
       --input-text: #1e293b;
-      --chat-bubble-me: #e0f2fe;
-      --chat-bubble-other: #ffffff;
       --dropdown-bg: #f8fafc;
       --dropdown-summary-bg: #f1f5f9;
     }
@@ -42,8 +40,6 @@
       --border: #334155;
       --input-bg: #0f172a;
       --input-text: #f8fafc;
-      --chat-bubble-me: #0369a1;
-      --chat-bubble-other: #334155;
       --dropdown-bg: #0f172a;
       --dropdown-summary-bg: #1e293b;
     }
@@ -322,27 +318,29 @@
       fill: #ffffff;
     }
 
-    /* Bouton Dark Mode discret en haut */
-    .dark-mode-toggle {
-      position: absolute;
-      top: 15px;
-      right: 15px;
+    /* Bouton rond minimaliste (Soleil / Lune) */
+    .theme-toggle-btn {
       background: var(--dropdown-bg);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 6px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: bold;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
       cursor: pointer;
-      z-index: 1500;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .theme-toggle-btn:hover {
+      transform: scale(1.05);
+      border-color: var(--primary);
     }
   </style>
 </head>
 <body>
-
-<!-- Bouton pour basculer le mode sombre / clair -->
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌓 Thème</button>
 
 <!-- ÉCRAN DE LANCEMENT (SPLASH SCREEN) -->
 <div id="splash-screen">
@@ -364,8 +362,11 @@
   </div>
 
   <!-- ECRAN DE CONNEXION -->
-  <div id="login-screen" class="card" style="margin-top: 15px;">
+  <div id="login-screen" class="card" style="margin-top: 15px; position: relative;">
     
+    <!-- Bouton Thème rond en haut à droite -->
+    <button class="theme-toggle-btn" onclick="toggleDarkMode()" style="position: absolute; top: 15px; right: 15px;" title="Changer de thème">🌓</button>
+
     <div id="fake-loader-screen" class="hidden">
       <div class="spinner"></div>
       <p style="font-size: 13px; font-weight: 600; color: var(--primary);">Connexion au réseau Palme d'Or...</p>
@@ -401,6 +402,7 @@
   <!-- APPLICATION PRINCIPALE -->
   <div id="app-screen" class="hidden">
     
+    <!-- En-tête enrichi avec le bouton thème -->
     <div class="card header" style="border: 1px solid var(--border);">
       <div style="display: flex; align-items: center; gap: 12px;">
         <img id="app-logo" src="" alt="Logo Palme d'Or" class="logo-img">
@@ -409,7 +411,8 @@
           <p style="font-size: 13px; font-weight: 700;">Réseau Palme d'Or 🚍</p>
         </div>
       </div>
-      <div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="theme-toggle-btn" onclick="toggleDarkMode()" title="Changer de thème">🌓</button>
         <button id="logout-btn" class="logout-btn">Déconnexion</button>
       </div>
     </div>
