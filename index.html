@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PDORegul</title>
+  <title>PDORegul V2</title>
   
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-512.png">
   <meta name="theme-color" content="#0284c7">
   <meta name="color-scheme" content="only light">
 
-  <!-- Firebase SDK Compat v9.22.1 (Strictement aligné avec script.js et le service worker) -->
+  <!-- Firebase SDK Compat v9.22.1 -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
@@ -49,6 +49,29 @@
     .status-accepted { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
     .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
     .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
+
+    /* Styles spécifiques V2 pour le service actif */
+    .active-service-box {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 2px solid #22c55e;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    /* Styles pour l'historique des 10 derniers services */
+    .history-item {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
     .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; margin-top: 20px; color: #ffffff; }
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -236,7 +259,7 @@
       <img id="splash-logo-img" src="https://via.placeholder.com/120?text=Logo" alt="Logo Réseau">
     </div>
     <h2 style="color: var(--primary); margin-bottom: 8px;">PDORegul</h2>
-    <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Réseau Palme d'Or • v1.8.3</p>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Réseau Palme d'Or • v2.0</p>
     <div class="spinner" style="margin: 0 auto;"></div>
   </div>
 </div>
@@ -263,12 +286,12 @@
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PDORegul</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Système de Régulation • Réseau Palme d'Or v1.8.3</p>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Système de Régulation • Réseau Palme d'Or v2.0</p>
       
       <!-- Message taquin V2 -->
       <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 15px; text-align: center;">
         <p style="font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 2px;">🚧 Alerte Info-Trafic PCC :</p>
-        <p style="font-size: 12px; color: #78350f;">La V2 arrive bientôt... Nos développeurs (et le café) travaillent dur pour vous éviter la panne sèche ! ☕🚍</p>
+        <p style="font-size: 12px; color: #78350f;">La V2 est enfin là... Préparez vos volants et vos cafés ! ☕🚍</p>
       </div>
 
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
@@ -280,7 +303,7 @@
       <span class="login-info-badge">Info Réseau • Palme d'Or</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
       <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
-        Module de prise de service optimisé. 🚍⚡
+        Module V2 : Suivi en direct et historique personnel. 🚍⚡
       </p>
     </div>
   </div>
@@ -311,7 +334,7 @@
       <div class="card" style="text-align: center; padding: 40px 20px;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">💬 Messagerie Directe</h3>
         <p style="font-size: 14px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-          🚀 Cette fonctionnalité de messagerie en temps réel arrive bientôt dans la version V2 de PDORegul !
+          🚀 Bientôt disponible dans les prochaines mises à jour V2 !
         </p>
       </div>
     </div>
@@ -321,7 +344,7 @@
       <div class="card" style="text-align: center; padding: 40px 20px;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">⚠️ Signalement d'Incident</h3>
         <p style="font-size: 14px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-          🚀 Le module de signalement rapide (retards, causes et horaires) sera disponible dans la future V2 !
+          🚀 Module de signalement rapide en cours de déploiement !
         </p>
       </div>
     </div>
@@ -329,6 +352,16 @@
     <!-- ONGLET 3 : ACCUEIL -->
     <div id="tab-home" class="tab-content">
       
+      <!-- ÉCRAN DE SERVICE ACTIF V2 (Commun conducteur / régul en service) -->
+      <div id="active-service-screen" class="card active-service-box hidden">
+        <p style="font-size: 11px; font-weight: 800; color: #166534; text-transform: uppercase; margin-bottom: 8px;">🟢 ACTUELLEMENT EN SERVICE</p>
+        <div id="active-line-badge" class="badge" style="font-size: 20px; padding: 8px 16px; margin-bottom: 10px;">L2</div>
+        <p id="active-line-name" style="font-size: 16px; font-weight: bold; color: #14532d; margin-bottom: 4px;"></p>
+        <p id="active-bus-info" style="font-size: 14px; color: #166534; font-weight: 600; margin-bottom: 12px;"></p>
+        <p id="active-since-txt" style="font-size: 12px; color: #15803d; background: #bbf7d0; padding: 6px; border-radius: 6px; margin-bottom: 15px; font-weight: 600;"></p>
+        <button id="end-service-btn" style="background: #dc2626; color: white; font-weight: bold;">Terminer mon service 🛑</button>
+      </div>
+
       <!-- VUE CONDUCTEUR -->
       <div id="driver-view" class="card hidden">
         <div class="profile-card">
@@ -447,6 +480,16 @@
           </div>
         </div>
 
+        <!-- Bloc Prise de Service perso pour Naatan (V2) -->
+        <div class="card" style="background: #f0fdf4; border: 1px solid #86efac; margin-bottom: 15px; padding: 12px;">
+          <p style="font-size: 13px; font-weight: bold; color: #166534; margin-bottom: 8px;">🚍 PRENDRE MON SERVICE (PCC)</p>
+          <label style="font-size: 11px; font-weight: bold;">Ligne</label>
+          <input type="text" id="regulator-self-ligne" placeholder="Ex: Ligne 1">
+          <label style="font-size: 11px; font-weight: bold;">Véhicule</label>
+          <input type="number" id="regulator-self-bus" placeholder="Ex: 1942">
+          <button id="regulator-start-service-btn" style="background: #16a34a; padding: 8px; margin-top: 4px;">Démarrer mon service 🟢</button>
+        </div>
+
         <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
           <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
           <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
@@ -526,7 +569,6 @@
         <div id="plan-container">
           <p id="plan-status-txt" style="font-size: 13px; font-weight: bold; color: #475569; margin-bottom: 10px;">Aucun plan PDF mis en ligne pour le moment.</p>
           
-          <!-- Plan intégré directement dans la page -->
           <div id="plan-wrapper-box" class="plan-wrapper hidden">
             <embed id="embedded-pdf-view" src="" type="application/pdf" class="embedded-plan" />
             <div class="plan-overlay" id="openFullscreenPlan"></div>
@@ -535,17 +577,18 @@
       </div>
     </div>
 
-    <!-- ONGLET 5 : HISTORIQUE -->
+    <!-- ONGLET 5 : HISTORIQUE (V2 - 10 derniers services persos) -->
     <div id="tab-history" class="tab-content hidden">
-      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
-        <div>
-          <h3 style="color: var(--primary); margin-bottom: 10px;">📁 Journal d'Activité</h3>
-          <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de la vacation en cours.</p>
-          <div style="font-size: 12px; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
-            <p>• Session initialisée sur PDORegul v1.8.3</p>
-          </div>
+      <div class="card">
+        <h3 style="color: var(--primary); margin-bottom: 5px;">📁 Mes Derniers Services</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de vos 10 derniers services enregistrés.</p>
+        
+        <!-- Liste des 10 derniers services -->
+        <div id="history-list-container">
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; padding: 20px;">Aucun service enregistré pour le moment.</p>
         </div>
-        <p style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 20px;">designed by transdev_stas and Google Gemini in September 2026</p>
+
+        <p style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 25px;">designed by transdev_stas and Google Gemini in September 2026</p>
       </div>
     </div>
 
