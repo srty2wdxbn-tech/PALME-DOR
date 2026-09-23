@@ -193,7 +193,6 @@ const firebaseConfig = {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     event.currentTarget.closest('.nav-item').classList.add('active');
 
-    // Si on bascule sur l'historique, on actualise l'affichage
     if (tabId === 'history' && currentUser) {
       renderHistory();
     }
@@ -250,7 +249,6 @@ const firebaseConfig = {
         if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
           if (state.serviceRequest.status === 'accepted') {
             new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
-            // V2 : Auto-démarrage du service si accepté par la régul
             startActiveService({
               ligne: state.serviceRequest.ligne,
               bus: `Bus ${state.serviceRequest.busNum}`,
@@ -327,7 +325,6 @@ const firebaseConfig = {
       startTimeFormatted: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     };
 
-    // Sauvegarde en cours dans sessionStorage
     sessionStorage.setItem('pdo_active_service_' + localStorage.getItem('palme_dor_user'), JSON.stringify(activeService));
     
     runActiveServiceTimer();
@@ -365,22 +362,19 @@ const firebaseConfig = {
       timestamp: Date.now()
     };
 
-    // Récupération et stockage des 10 derniers services persos
     const userCode = localStorage.getItem('palme_dor_user');
     const storageKey = 'pdo_history_' + userCode;
     let history = JSON.parse(localStorage.getItem(storageKey)) || [];
     
-    history.unshift(completedService); // Ajout au début
-    if (history.length > 10) history = history.slice(0, 10); // Garder max 10
+    history.unshift(completedService);
+    if (history.length > 10) history = history.slice(0, 10);
     
     localStorage.setItem(storageKey, JSON.stringify(history));
 
-    // Notification Discord de fin de service
     envoyerAlerteDiscord("🛑 Fin de Service", `${currentUser.name} a terminé son service sur la ligne ${completedService.ligne} (${completedService.bus}).`);
 
-    // Reset état actif
     activeService = null;
-    sessionStorage.removeItem('pdo_active_service_' + userCode;
+    sessionStorage.removeItem('pdo_active_service_' + userCode);
     render();
     alert('Service terminé et enregistré dans votre onglet "Mes derniers services" !');
   }
@@ -413,6 +407,31 @@ const firebaseConfig = {
       container.appendChild(div);
     });
   }
+
+  // ==========================================
+  // GESTION DES SIGNALEMENTS RAPIDES (V2)
+  // ==========================================
+  window.envoyerSignalement = function(messageType) {
+    if (!currentUser) return;
+    const infoService = activeService ? `(Ligne ${activeService.ligne} - ${activeService.bus})` : '';
+    envoyerAlerteDiscord("⚠️ Signalement Incident", `${currentUser.name} ${infoService} :\n👉 **${messageType}**`);
+    alert(`Signalement transmis avec succès : "${messageType}"`);
+  };
+
+  document.getElementById('send-custom-signal-btn').addEventListener('click', () => {
+    const txtArea = document.getElementById('custom-signal-txt');
+    const msg = txtArea.value.trim();
+    if (!msg) {
+      alert("Veuillez saisir un message personnalisé.");
+      return;
+    }
+    if (!currentUser) return;
+
+    const infoService = activeService ? `(Ligne ${activeService.ligne} - ${activeService.bus})` : '';
+    envoyerAlerteDiscord("⚠️ Signalement Personnalisé", `${currentUser.name} ${infoService} :\n💬 *${msg}*`);
+    txtArea.value = '';
+    alert("Alerte personnalisée transmise sur Discord !");
+  });
 
   function render() {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
@@ -476,7 +495,6 @@ const firebaseConfig = {
     document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
     document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
 
-    // Gestion de l'affichage du bloc "En service actif" (V2)
     const activeServiceScreen = document.getElementById('active-service-screen');
     if (activeService) {
       activeServiceScreen.classList.remove('hidden');
@@ -608,7 +626,6 @@ const firebaseConfig = {
       stateRef.set(state);
     }
 
-    // Gestion du clic sur "Terminer mon service" (V2)
     if (e.target && e.target.id === 'end-service-btn') {
       endActiveService();
     }
@@ -623,7 +640,6 @@ const firebaseConfig = {
     document.getElementById('app-screen').classList.remove('hidden');
     document.getElementById('main-nav-bar').classList.remove('hidden');
 
-    // Restauration du service actif s'il y en avait un en cours pour cet utilisateur
     const savedActive = sessionStorage.getItem('pdo_active_service_' + code);
     if (savedActive) {
       activeService = JSON.parse(savedActive);
@@ -730,7 +746,6 @@ const firebaseConfig = {
       state.serviceRequest.status = 'accepted';
       stateRef.set(state);
 
-      // V2 : Si la régul accepte, déclenchement direct du service actif pour Romain
       startActiveService({
         ligne: state.serviceRequest.ligne,
         bus: `Bus ${state.serviceRequest.busNum}`,
@@ -746,7 +761,6 @@ const firebaseConfig = {
     }
   });
 
-  // V2 : Action pour que Naatan (Régulateur) puisse lancer son propre service depuis l'accueil
   document.getElementById('regulator-start-service-btn').addEventListener('click', () => {
     const ligne = document.getElementById('regulator-self-ligne').value.trim();
     const bus = document.getElementById('regulator-self-bus').value.trim();
