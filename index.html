@@ -73,6 +73,30 @@
       align-items: center;
     }
 
+    /* Grille de boutons rapides pour les signalements */
+    .signal-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .signal-btn {
+      background: #f1f5f9;
+      color: #1e293b;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .signal-btn:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+
     .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; margin-top: 20px; color: #ffffff; }
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     
@@ -339,13 +363,25 @@
       </div>
     </div>
 
-    <!-- ONGLET 2 : SIGNALEMENTS -->
+    <!-- ONGLET 2 : SIGNALEMENTS (V2 - Messages rapides pré-enregistrés) -->
     <div id="tab-signals" class="tab-content hidden">
-      <div class="card" style="text-align: center; padding: 40px 20px;">
-        <h3 style="color: var(--primary); margin-bottom: 10px;">⚠️ Signalement d'Incident</h3>
-        <p style="font-size: 14px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-          🚀 Module de signalement rapide en cours de déploiement !
-        </p>
+      <div class="card">
+        <h3 style="color: var(--primary); margin-bottom: 5px;">⚠️ Signalement d'Incident</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Envoyez une alerte instantanée au PCC et sur Discord.</p>
+
+        <label style="font-size: 12px; font-weight: bold; margin-bottom: 6px; display: block;">Messages rapides :</label>
+        <div class="signal-grid">
+          <button class="signal-btn" onclick="envoyerSignalement('Retard important (+ de 5 min)')">⏱️ Retard important (+ de 5 min)</button>
+          <button class="signal-btn" onclick="envoyerSignalement('Panne mécanique / Incident technique')">🔧 Panne mécanique / Incident technique</button>
+          <button class="signal-btn" onclick="envoyerSignalement('Déviation de l\'itinéraire habituel')">🚧 Déviation de l'itinéraire habituel</button>
+          <button class="signal-btn" onclick="envoyerSignalement('Accident ou collision sur le parcours')">🚨 Accident ou collision sur le parcours</button>
+          <button class="signal-btn" onclick="envoyerSignalement('Contrôle / Intervention des forces de l\'ordre')">👮‍♂️ Contrôle / Intervention des forces de l'ordre</button>
+          <button class="signal-btn" onclick="envoyerSignalement('Fin d\'incident / Retour à la normale')">✅ Fin d'incident / Retour à la normale</button>
+        </div>
+
+        <label style="font-size: 12px; font-weight: bold; margin-top: 10px; display: block;">Ou message personnalisé :</label>
+        <textarea id="custom-signal-txt" rows="2" placeholder="Précisez la situation..."></textarea>
+        <button id="send-custom-signal-btn" style="background: #f59e0b; color: white; margin-top: 4px;">Envoyer l'alerte personnalisée 🚨</button>
       </div>
     </div>
 
