@@ -97,6 +97,31 @@
       border-color: #cbd5e1;
     }
 
+    /* Styles pour les menus déroulants PCC (V2) */
+    .pcc-dropdown {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .pcc-dropdown summary {
+      padding: 12px 15px;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--primary);
+      cursor: pointer;
+      background: #f1f5f9;
+      user-select: none;
+    }
+    .pcc-dropdown[open] summary {
+      border-bottom: 1px solid var(--border);
+    }
+    .pcc-dropdown-content {
+      padding: 15px;
+      background: #ffffff;
+    }
+
     .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; margin-top: 20px; color: #ffffff; }
     .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     
@@ -363,7 +388,7 @@
       </div>
     </div>
 
-    <!-- ONGLET 2 : SIGNALEMENTS (V2 - Messages rapides pré-enregistrés) -->
+    <!-- ONGLET 2 : SIGNALEMENTS -->
     <div id="tab-signals" class="tab-content hidden">
       <div class="card">
         <h3 style="color: var(--primary); margin-bottom: 5px;">⚠️ Signalement d'Incident</h3>
@@ -388,7 +413,7 @@
     <!-- ONGLET 3 : ACCUEIL -->
     <div id="tab-home" class="tab-content">
       
-      <!-- ÉCRAN DE SERVICE ACTIF V2 (Commun conducteur / régul en service) -->
+      <!-- ÉCRAN DE SERVICE ACTIF V2 -->
       <div id="active-service-screen" class="card active-service-box hidden">
         <p style="font-size: 11px; font-weight: 800; color: #166534; text-transform: uppercase; margin-bottom: 8px;">🟢 ACTUELLEMENT EN SERVICE</p>
         <div id="active-line-badge" class="badge" style="font-size: 20px; padding: 8px 16px; margin-bottom: 10px;">L2</div>
@@ -506,7 +531,7 @@
         </div>
       </div>
 
-      <!-- VUE RÉGULATEUR -->
+      <!-- VUE RÉGULATEUR (ORGANISÉE EN 3 MENUS DÉROULANTS V2) -->
       <div id="regulator-view" class="card hidden">
         <div class="profile-card">
           <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
@@ -516,16 +541,7 @@
           </div>
         </div>
 
-        <!-- Bloc Prise de Service perso pour Naatan (V2) -->
-        <div class="card" style="background: #f0fdf4; border: 1px solid #86efac; margin-bottom: 15px; padding: 12px;">
-          <p style="font-size: 13px; font-weight: bold; color: #166534; margin-bottom: 8px;">🚍 PRENDRE MON SERVICE (PCC)</p>
-          <label style="font-size: 11px; font-weight: bold;">Ligne</label>
-          <input type="text" id="regulator-self-ligne" placeholder="Ex: Ligne 1">
-          <label style="font-size: 11px; font-weight: bold;">Véhicule</label>
-          <input type="number" id="regulator-self-bus" placeholder="Ex: 1942">
-          <button id="regulator-start-service-btn" style="background: #16a34a; padding: 8px; margin-top: 4px;">Démarrer mon service 🟢</button>
-        </div>
-
+        <!-- Alertes en attente (Toujours visibles en haut pour réagir vite) -->
         <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
           <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
           <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
@@ -543,55 +559,77 @@
             <button id="refuse-req-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
           </div>
         </div>
-        
-        <label style="font-size: 12px; font-weight: bold;">Ligne affectée</label>
-        <select id="select-ligne"></select>
 
-        <label style="font-size: 12px; font-weight: bold;">Véhicule assigné</label>
-        <select id="select-bus"></select>
-
-        <div style="display: flex; gap: 10px;">
-          <div style="flex: 1;">
-            <label style="font-size: 12px; font-weight: bold;">Prise</label>
-            <input type="text" id="input-prise" value="06:15">
+        <!-- MENU 1 : MA PRISE DE SERVICE (PCC) -->
+        <details class="pcc-dropdown" open>
+          <summary>🟢 1. Ma Prise de Service (PCC)</summary>
+          <div class="pcc-dropdown-content">
+            <label style="font-size: 11px; font-weight: bold;">Ligne</label>
+            <input type="text" id="regulator-self-ligne" placeholder="Ex: Ligne 1">
+            <label style="font-size: 11px; font-weight: bold;">Véhicule</label>
+            <input type="number" id="regulator-self-bus" placeholder="Ex: 1942">
+            <button id="regulator-start-service-btn" style="background: #16a34a; padding: 10px; margin-top: 6px;">Démarrer mon service 🟢</button>
           </div>
-          <div style="flex: 1;">
-            <label style="font-size: 12px; font-weight: bold;">Fin</label>
-            <input type="text" id="input-fin" value="14:30">
+        </details>
+
+        <!-- MENU 2 : SERVICES & AFFECTATIONS DE ROMAIN -->
+        <details class="pcc-dropdown">
+          <summary>🚍 2. Services & Affectations de Romain</summary>
+          <div class="pcc-dropdown-content">
+            <label style="font-size: 12px; font-weight: bold;">Ligne affectée à Romain</label>
+            <select id="select-ligne"></select>
+
+            <label style="font-size: 12px; font-weight: bold;">Véhicule assigné</label>
+            <select id="select-bus"></select>
+
+            <div style="display: flex; gap: 10px;">
+              <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold;">Prise</label>
+                <input type="text" id="input-prise" value="06:15">
+              </div>
+              <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold;">Fin</label>
+                <input type="text" id="input-fin" value="14:30">
+              </div>
+            </div>
+
+            <label style="font-size: 12px; font-weight: bold;">Consignes pour Romain</label>
+            <textarea id="input-notes" rows="2">Prendre le véhicule au dépôt principal.</textarea>
+
+            <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
+            <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
+
+            <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
+            <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'accueil..."></textarea>
+
+            <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Lignes concernées par l'Info Trafic d'accueil :</label>
+            <div id="login-lines-checkboxes" class="checkbox-grid"></div>
           </div>
-        </div>
+        </details>
 
-        <label style="font-size: 12px; font-weight: bold;">Consignes pour Romain</label>
-        <textarea id="input-notes" rows="2">Prendre le véhicule au dépôt principal.</textarea>
+        <!-- MENU 3 : GESTION DES MÉDIAS DU RÉSEAU -->
+        <details class="pcc-dropdown">
+          <summary>🖼️ 3. Gestion des Médias & Visuels</summary>
+          <div class="pcc-dropdown-content">
+            <label style="font-size: 12px; font-weight: bold; color: #7c3aed;">Logo / Image de chargement (Ouverture de l'app)</label>
+            <input type="file" id="input-splash-logo" accept="image/*" style="background: #ffffff;">
 
-        <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
-        <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
+            <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
+            <input type="file" id="input-bus-photo" accept="image/*" style="background: #ffffff;">
 
-        <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
-        <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'accueil..."></textarea>
+            <label style="font-size: 12px; font-weight: bold;">Importer le Plan du Réseau (PDF)</label>
+            <input type="file" id="input-pdf-file" accept="application/pdf" style="background: #ffffff;">
 
-        <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Lignes concernées par l'Info Trafic d'accueil :</label>
-        <div id="login-lines-checkboxes" class="checkbox-grid"></div>
+            <label style="font-size: 12px; font-weight: bold;">Photo de Naatan (Régulateur)</label>
+            <input type="file" id="input-regulator-photo" accept="image/*" style="background: #ffffff;">
 
-        <hr style="margin: 15px 0; border: none; border-top: 1px dashed var(--border);">
-        <p style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">GESTION DES MÉDIAS DU RÉSEAU</p>
+            <label style="font-size: 12px; font-weight: bold;">Photo de Romain (Conducteur)</label>
+            <input type="file" id="input-driver-photo" accept="image/*" style="background: #ffffff;">
+          </div>
+        </details>
 
-        <label style="font-size: 12px; font-weight: bold; color: #7c3aed;">Logo / Image de chargement (Ouverture de l'app)</label>
-        <input type="file" id="input-splash-logo" accept="image/*" style="background: #f8fafc;">
-
-        <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
-        <input type="file" id="input-bus-photo" accept="image/*" style="background: #f8fafc;">
-
-        <label style="font-size: 12px; font-weight: bold;">Importer le Plan du Réseau (PDF)</label>
-        <input type="file" id="input-pdf-file" accept="application/pdf" style="background: #f8fafc;">
-
-        <label style="font-size: 12px; font-weight: bold;">Photo de Naatan (Régulateur)</label>
-        <input type="file" id="input-regulator-photo" accept="image/*" style="background: #f8fafc;">
-
-        <label style="font-size: 12px; font-weight: bold;">Photo de Romain (Conducteur)</label>
-        <input type="file" id="input-driver-photo" accept="image/*" style="background: #f8fafc;">
-
-        <button id="save-btn" style="background: #16a34a; margin-top: 10px;">Mettre à jour et Transmettre</button>
+        <!-- Bouton global de sauvegarde -->
+        <button id="save-btn" style="background: #16a34a; margin-top: 10px; font-size: 15px; padding: 14px;">Mettre à jour et Transmettre 🚀</button>
       </div>
 
     </div>
@@ -613,13 +651,12 @@
       </div>
     </div>
 
-    <!-- ONGLET 5 : HISTORIQUE (V2 - 10 derniers services persos) -->
+    <!-- ONGLET 5 : HISTORIQUE -->
     <div id="tab-history" class="tab-content hidden">
       <div class="card">
         <h3 style="color: var(--primary); margin-bottom: 5px;">📁 Mes Derniers Services</h3>
         <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de vos 10 derniers services enregistrés.</p>
         
-        <!-- Liste des 10 derniers services -->
         <div id="history-list-container">
           <p style="font-size: 12px; color: #94a3b8; text-align: center; padding: 20px;">Aucun service enregistré pour le moment.</p>
         </div>
