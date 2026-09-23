@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-512.png">
   <meta name="theme-color" content="#0284c7">
-  <meta name="color-scheme" content="only light">
+  <meta name="color-scheme" content="light dark">
 
   <!-- Firebase SDK Compat v9.22.1 -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -16,6 +16,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
 
   <style>
+    /* VARIABLES THEME CLAIR (DEFAULT) */
     :root {
       color-scheme: light;
       --primary: #0284c7;
@@ -23,19 +24,42 @@
       --card-bg: #ffffff;
       --text: #1e293b;
       --border: #e2e8f0;
+      --input-bg: #ffffff;
+      --input-text: #1e293b;
+      --chat-bubble-me: #e0f2fe;
+      --chat-bubble-other: #ffffff;
+      --dropdown-bg: #f8fafc;
+      --dropdown-summary-bg: #f1f5f9;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; color-scheme: light; }
-    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 105px; background-attachment: fixed; }
+
+    /* VARIABLES THEME SOMBRE */
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --primary: #38bdf8;
+      --bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #090d16 100%);
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --border: #334155;
+      --input-bg: #0f172a;
+      --input-text: #f8fafc;
+      --chat-bubble-me: #0369a1;
+      --chat-bubble-other: #334155;
+      --dropdown-bg: #0f172a;
+      --dropdown-summary-bg: #1e293b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg-gradient) !important; color: var(--text) !important; min-height: 100vh; padding: 15px; padding-bottom: 105px; background-attachment: fixed; transition: background 0.3s ease, color 0.3s ease; }
     
     .container { max-width: 500px; margin: 0 auto; position: relative; }
-    .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 15px; position: relative; overflow: hidden; }
+    .card { background: var(--card-bg) !important; color: var(--text) !important; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid var(--border); margin-bottom: 15px; position: relative; overflow: hidden; }
     
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     .logo-img { height: 40px; max-width: 140px; object-fit: contain; }
     
     .logout-btn { background: #dc2626 !important; color: white !important; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; }
     
-    input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #ffffff !important; color: #1e293b !important; }
+    input, select, textarea { width: 100%; padding: 10px 12px; margin-top: 5px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--input-bg) !important; color: var(--input-text) !important; }
     button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     
     .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 14px; text-align: center; margin-right: 4px; margin-bottom: 4px; }
@@ -48,11 +72,11 @@
     .status-pending { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
     .status-accepted { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
     .status-refused { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
-    .status-fallback { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; line-height: 1.4; }
+    .status-fallback { background: var(--dropdown-bg); color: var(--text); border: 1px solid var(--border); font-size: 13px; text-align: left; line-height: 1.4; }
 
     /* Styles spécifiques V2 pour le service actif */
     .active-service-box {
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 101, 52, 0.2) 100%);
       border: 2px solid #22c55e;
       border-radius: 12px;
       padding: 16px;
@@ -62,7 +86,7 @@
 
     /* Styles pour l'historique des 10 derniers services */
     .history-item {
-      background: #f8fafc;
+      background: var(--dropdown-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 10px 12px;
@@ -81,8 +105,8 @@
       margin-bottom: 15px;
     }
     .signal-btn {
-      background: #f1f5f9;
-      color: #1e293b;
+      background: var(--dropdown-bg);
+      color: var(--text);
       border: 1px solid var(--border);
       padding: 10px 14px;
       border-radius: 8px;
@@ -93,13 +117,12 @@
       transition: all 0.2s ease;
     }
     .signal-btn:hover {
-      background: #e2e8f0;
-      border-color: #cbd5e1;
+      background: var(--border);
     }
 
     /* Styles pour les menus déroulants PCC (V2) */
     .pcc-dropdown {
-      background: #f8fafc;
+      background: var(--dropdown-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
       margin-bottom: 12px;
@@ -111,7 +134,7 @@
       font-weight: bold;
       color: var(--primary);
       cursor: pointer;
-      background: #f1f5f9;
+      background: var(--dropdown-summary-bg);
       user-select: none;
     }
     .pcc-dropdown[open] summary {
@@ -119,14 +142,14 @@
     }
     .pcc-dropdown-content {
       padding: 15px;
-      background: #ffffff;
+      background: var(--card-bg);
     }
 
-    .login-info-card { background: #1e1b4b; border: 1px solid #312e81; border-radius: 12px; padding: 14px; margin-top: 20px; color: #ffffff; }
-    .login-info-badge { display: inline-block; background: #3730a3; color: #e0e7ff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .login-info-card { background: var(--dropdown-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 20px; color: var(--text); }
+    .login-info-badge { display: inline-block; background: var(--primary); color: #ffffff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
-    .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #1e293b; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--dropdown-bg); margin-bottom: 12px; }
+    .checkbox-item { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text); }
 
     /* Écran de lancement (Splash Screen) */
     #splash-screen {
@@ -149,7 +172,7 @@
       text-align: center;
       max-width: 380px;
       width: 100%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
     .splash-logo-box {
       width: 120px;
@@ -158,7 +181,7 @@
       border-radius: 50%;
       border: 3px solid var(--primary);
       overflow: hidden;
-      background: #f1f5f9;
+      background: var(--dropdown-bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -169,11 +192,11 @@
       object-fit: cover;
     }
 
-    /* Faux écran de chargement connexion */
     #fake-loader-screen {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--card-bg);
+      opacity: 0.95;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -195,7 +218,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Styles pour le plan PDF intégré et la modale plein écran */
     .plan-wrapper {
       position: relative;
       width: 100%;
@@ -203,7 +225,7 @@
       border-radius: 10px;
       overflow: hidden;
       border: 1px solid var(--border);
-      background: #f8fafc;
+      background: var(--dropdown-bg);
       margin-bottom: 10px;
     }
     .embedded-plan {
@@ -252,7 +274,7 @@
       cursor: pointer;
     }
 
-    /* Barre de navigation blanche */
+    /* Barre de navigation fixe */
     .nav-bar {
       position: fixed;
       bottom: 15px;
@@ -260,19 +282,19 @@
       right: 15px;
       max-width: 470px;
       margin: 0 auto;
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 20px;
       display: flex;
       justify-content: space-around;
       padding: 8px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
       z-index: 1000;
     }
     .nav-item {
       background: transparent;
       border: none;
-      color: #64748b;
+      color: var(--text);
       font-size: 10px;
       font-weight: 600;
       display: flex;
@@ -282,24 +304,45 @@
       width: 18%;
       padding: 6px 2px;
       border-radius: 12px;
+      opacity: 0.7;
       transition: all 0.2s ease;
     }
     .nav-item svg {
       width: 20px;
       height: 20px;
-      fill: #64748b;
+      fill: var(--text);
       margin-bottom: 3px;
     }
     .nav-item.active {
       background: var(--primary);
       color: #ffffff;
+      opacity: 1;
     }
     .nav-item.active svg {
       fill: #ffffff;
     }
+
+    /* Bouton Dark Mode discret en haut */
+    .dark-mode-toggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--dropdown-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1500;
+    }
   </style>
 </head>
 <body>
+
+<!-- Bouton pour basculer le mode sombre / clair -->
+<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌓 Thème</button>
 
 <!-- ÉCRAN DE LANCEMENT (SPLASH SCREEN) -->
 <div id="splash-screen">
@@ -308,39 +351,37 @@
       <img id="splash-logo-img" src="https://via.placeholder.com/120?text=Logo" alt="Logo Réseau">
     </div>
     <h2 style="color: var(--primary); margin-bottom: 8px;">PDORegul</h2>
-    <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Réseau Palme d'Or • v2.0</p>
+    <p style="font-size: 13px; opacity: 0.7; margin-bottom: 20px;">Réseau Palme d'Or • v2.0</p>
     <div class="spinner" style="margin: 0 auto;"></div>
   </div>
 </div>
 
 <div class="container">
 
-  <div id="notif-banner" class="card hidden" style="background: #eff6ff; border: 1px solid #bfdbfe; text-align: center; padding: 12px; margin-bottom: 15px;">
-    <p style="font-size: 13px; color: #1e40af; margin-bottom: 8px;">Active les notifications pour recevoir les alertes en arrière-plan !</p>
+  <div id="notif-banner" class="card hidden" style="background: rgba(37, 99, 235, 0.1); border: 1px solid #bfdbfe; text-align: center; padding: 12px; margin-bottom: 15px;">
+    <p style="font-size: 13px; margin-bottom: 8px;">Active les notifications pour recevoir les alertes en arrière-plan !</p>
     <button id="enable-notif-btn" style="background: #2563eb; padding: 8px; font-size: 13px;">Activer les notifications 🔔</button>
   </div>
 
   <!-- ECRAN DE CONNEXION -->
   <div id="login-screen" class="card" style="margin-top: 15px;">
     
-    <!-- Loader de connexion -->
     <div id="fake-loader-screen" class="hidden">
       <div class="spinner"></div>
       <p style="font-size: 13px; font-weight: 600; color: var(--primary);">Connexion au réseau Palme d'Or...</p>
     </div>
 
-    <div style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; max-height: 170px; background: #f1f5f9; border: 1px solid var(--border);">
+    <div style="margin-bottom: 15px; border-radius: 12px; overflow: hidden; max-height: 170px; background: var(--dropdown-bg); border: 1px solid var(--border);">
       <img id="login-bus-img" src="https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or" alt="Réseau Palme d'Or" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
     
     <div style="text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 5px;">PDORegul</h2>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Système de Régulation • Réseau Palme d'Or v2.0</p>
+      <p style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;">Système de Régulation • Réseau Palme d'Or v2.0</p>
       
-      <!-- Message taquin V2 -->
-      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 15px; text-align: center;">
+      <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(253, 230, 138, 0.2) 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 15px; text-align: center;">
         <p style="font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 2px;">🚧 Alerte Info-Trafic PCC :</p>
-        <p style="font-size: 12px; color: #78350f;">La V2 est enfin là... Préparez vos volants et vos cafés ! ☕🚍</p>
+        <p style="font-size: 12px; color: #d97706;">La V2 est enfin là... Préparez vos volants et vos cafés ! ☕🚍</p>
       </div>
 
       <input type="tel" inputmode="numeric" pattern="[0-9]*" id="matricule-input" placeholder="Entrer votre numéro de matricule" style="text-align: center;">
@@ -351,7 +392,7 @@
     <div class="login-info-card">
       <span class="login-info-badge">Info Réseau • Palme d'Or</span>
       <div id="login-badges-container" style="margin-bottom: 6px;"></div>
-      <p id="login-info-text" style="font-size: 13px; color: #e2e8f0; line-height: 1.4;">
+      <p id="login-info-text" style="font-size: 13px; line-height: 1.4; opacity: 0.9;">
         Module V2 : Suivi en direct et historique personnel. 🚍⚡
       </p>
     </div>
@@ -360,13 +401,12 @@
   <!-- APPLICATION PRINCIPALE -->
   <div id="app-screen" class="hidden">
     
-    <!-- En-tête enrichi -->
-    <div class="card header" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd;">
+    <div class="card header" style="border: 1px solid var(--border);">
       <div style="display: flex; align-items: center; gap: 12px;">
         <img id="app-logo" src="" alt="Logo Palme d'Or" class="logo-img">
         <div>
-          <p style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.5px;">PCC Central</p>
-          <p style="font-size: 13px; font-weight: 700; color: #0369a1;">Réseau Palme d'Or 🚍</p>
+          <p style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">PCC Central</p>
+          <p style="font-size: 13px; font-weight: 700;">Réseau Palme d'Or 🚍</p>
         </div>
       </div>
       <div>
@@ -383,12 +423,10 @@
       <div class="card" style="display: flex; flex-direction: column; height: 420px; padding: 15px;">
         <h3 style="color: var(--primary); margin-bottom: 10px; text-align: center;">💬 Messagerie Directe</h3>
         
-        <!-- Zone d'affichage des messages -->
-        <div id="chat-messages-container" style="flex: 1; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div id="chat-messages-container" style="flex: 1; overflow-y: auto; background: var(--dropdown-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
           <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: auto;">Chargement de la discussion...</p>
         </div>
 
-        <!-- Zone de saisie -->
         <div style="display: flex; gap: 8px;">
           <input type="text" id="chat-input" placeholder="Écrire un message..." style="margin: 0; flex: 1;">
           <button id="chat-send-btn" style="width: auto; padding: 0 16px; background: var(--primary);">Envoyer 🚀</button>
@@ -400,7 +438,7 @@
     <div id="tab-signals" class="tab-content hidden">
       <div class="card">
         <h3 style="color: var(--primary); margin-bottom: 5px;">⚠️ Signalement d'Incident</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Envoyez une alerte instantanée au PCC et sur Discord.</p>
+        <p style="font-size: 12px; opacity: 0.7; margin-bottom: 15px;">Envoyez une alerte instantanée au PCC et sur Discord.</p>
 
         <label style="font-size: 12px; font-weight: bold; margin-bottom: 6px; display: block;">Messages rapides :</label>
         <div class="signal-grid">
@@ -421,13 +459,12 @@
     <!-- ONGLET 3 : ACCUEIL -->
     <div id="tab-home" class="tab-content">
       
-      <!-- ÉCRAN DE SERVICE ACTIF V2 -->
       <div id="active-service-screen" class="card active-service-box hidden">
-        <p style="font-size: 11px; font-weight: 800; color: #166534; text-transform: uppercase; margin-bottom: 8px;">🟢 ACTUELLEMENT EN SERVICE</p>
+        <p style="font-size: 11px; font-weight: 800; color: #22c55e; text-transform: uppercase; margin-bottom: 8px;">🟢 ACTUELLEMENT EN SERVICE</p>
         <div id="active-line-badge" class="badge" style="font-size: 20px; padding: 8px 16px; margin-bottom: 10px;">L2</div>
-        <p id="active-line-name" style="font-size: 16px; font-weight: bold; color: #14532d; margin-bottom: 4px;"></p>
-        <p id="active-bus-info" style="font-size: 14px; color: #166534; font-weight: 600; margin-bottom: 12px;"></p>
-        <p id="active-since-txt" style="font-size: 12px; color: #15803d; background: #bbf7d0; padding: 6px; border-radius: 6px; margin-bottom: 15px; font-weight: 600;"></p>
+        <p id="active-line-name" style="font-size: 16px; font-weight: bold; margin-bottom: 4px;"></p>
+        <p id="active-bus-info" style="font-size: 14px; font-weight: 600; margin-bottom: 12px;"></p>
+        <p id="active-since-txt" style="font-size: 12px; background: rgba(34, 197, 94, 0.2); padding: 6px; border-radius: 6px; margin-bottom: 15px; font-weight: 600;"></p>
         <button id="end-service-btn" style="background: #dc2626; color: white; font-weight: bold;">Terminer mon service 🛑</button>
       </div>
 
@@ -436,7 +473,7 @@
         <div class="profile-card">
           <img id="driver-avatar" src="https://via.placeholder.com/150?text=Romain" alt="Romain DESVIGNES" class="avatar">
           <div>
-            <p style="font-size: 11px; color: #64748b; font-weight: bold;">FEUILLE DE ROUTE CONDUCTEUR</p>
+            <p style="font-size: 11px; opacity: 0.7; font-weight: bold;">FEUILLE DE ROUTE CONDUCTEUR</p>
             <p id="driver-user-name" style="font-size: 15px; font-weight: bold;"></p>
           </div>
         </div>
@@ -452,7 +489,7 @@
         <div style="border-top: 1px solid var(--border); padding-top: 10px; font-size: 13px; margin-bottom: 15px;">
           <p><strong>Horaires :</strong> <span id="service-hours"></span></p>
           <p style="margin-top: 8px;"><strong>Consignes PCC :</strong></p>
-          <p id="pcc-notes" style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
+          <p id="pcc-notes" style="background: var(--dropdown-bg); padding: 8px; border-radius: 6px; margin-top: 4px; font-style: italic;"></p>
         </div>
 
         <!-- GESTION DU PLANNING -->
@@ -464,9 +501,9 @@
           </div>
 
           <div id="planning-status-display" class="hidden">
-            <div id="planning-box-pending" class="service-status-box status-pending hidden" style="border-color: #7c3aed; background: #f5f3ff; color: #6d28d9;">
+            <div id="planning-box-pending" class="service-status-box status-pending hidden" style="border-color: #7c3aed; background: rgba(124, 58, 237, 0.1);">
               ⏳ Demande de planning transmise... En attente du régulateur.<br>
-              <button id="manual-planning-fallback-btn" style="margin-top: 12px; background: transparent; color: #6d28d9; border: 1px solid #7c3aed; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
+              <button id="manual-planning-fallback-btn" style="margin-top: 12px; background: transparent; color: #a78bfa; border: 1px solid #7c3aed; padding: 6px; font-size: 12px; text-decoration: underline; cursor: pointer;">
                 ⏱️ Pas de réponse ? Activer le mode secours planning
               </button>
             </div>
@@ -533,7 +570,7 @@
         </div>
 
         <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 15px; text-align: center;">
-          <p style="font-size: 12px; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
+          <p style="font-size: 12px; color: #f59e0b; background: rgba(245, 158, 11, 0.1); border: 1px solid #fcd34d; padding: 10px; border-radius: 8px; font-weight: 600; line-height: 1.4;">
             ⚠️ Veuillez effectuer votre demande de planning au moins 30 minutes avant votre prise de service !
           </p>
         </div>
@@ -544,23 +581,22 @@
         <div class="profile-card">
           <img id="regulator-avatar" src="https://via.placeholder.com/150?text=Naatan" alt="Naatan VERNES-FLACHEY" class="avatar">
           <div>
-            <p style="font-size: 11px; color: #64748b; font-weight: bold;">PANNEAU DE RÉGULATION (PCC)</p>
+            <p style="font-size: 11px; opacity: 0.7; font-weight: bold;">PANNEAU DE RÉGULATION (PCC)</p>
             <p id="regulator-user-name" style="font-size: 15px; font-weight: bold;"></p>
           </div>
         </div>
 
-        <!-- Alertes en attente -->
-        <div id="regulator-planning-alert" class="card hidden" style="background: #f5f3ff; border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
-          <p style="font-size: 13px; font-weight: bold; color: #6d28d9; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
-          <p style="font-size: 13px; color: #4c1d95; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
+        <div id="regulator-planning-alert" class="card hidden" style="background: rgba(124, 58, 237, 0.1); border: 2px solid #7c3aed; margin-bottom: 15px; padding: 12px;">
+          <p style="font-size: 13px; font-weight: bold; color: #a78bfa; margin-bottom: 8px;">🗓️ DEMANDE DE PLANNING EN ATTENTE</p>
+          <p style="font-size: 13px; margin-bottom: 10px;">Le conducteur Romain (1942) effectue une demande concernant son planning.</p>
           <div style="display: flex; gap: 10px;">
             <button id="accept-planning-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
             <button id="refuse-planning-btn" style="background: #dc2626; padding: 8px;">Refuser</button>
           </div>
         </div>
 
-        <div id="regulator-request-box" class="card hidden" style="background: #fffbeb; border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
-          <p style="font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
+        <div id="regulator-request-box" class="card hidden" style="background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b; margin-bottom: 15px; padding: 12px;">
+          <p style="font-size: 13px; font-weight: bold; color: #f59e0b; margin-bottom: 8px;">🚨 DEMANDE DE SERVICE EN ATTENTE</p>
           <p style="font-size: 13px;" id="req-details"></p>
           <div style="display: flex; gap: 10px; margin-top: 10px;">
             <button id="accept-req-btn" style="background: #16a34a; padding: 8px;">Accepter</button>
@@ -568,7 +604,7 @@
           </div>
         </div>
 
-        <!-- MENU 1 : MA PRISE DE SERVICE (PCC) -->
+        <!-- MENU 1 : MA PRISE DE SERVICE -->
         <details class="pcc-dropdown" open>
           <summary>🟢 1. Ma Prise de Service (PCC)</summary>
           <div class="pcc-dropdown-content">
@@ -580,7 +616,7 @@
           </div>
         </details>
 
-        <!-- MENU 2 : SERVICES & AFFECTATIONS DE ROMAIN -->
+        <!-- MENU 2 : SERVICES & AFFECTATIONS -->
         <details class="pcc-dropdown">
           <summary>🚍 2. Services & Affectations de Romain</summary>
           <div class="pcc-dropdown-content">
@@ -607,36 +643,35 @@
             <label style="font-size: 12px; font-weight: bold;">Alerte Trafic réseau (Bandeau interne)</label>
             <input type="text" id="input-alerte" placeholder="Ex: Travaux secteur Gare">
 
-            <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Info Trafic / Bannière Écran de Connexion</label>
+            <label style="font-size: 12px; font-weight: bold; color: var(--primary);">Info Trafic / Bannière Écran de Connexion</label>
             <textarea id="input-login-info" rows="2" placeholder="Message visible sur l'accueil..."></textarea>
 
-            <label style="font-size: 12px; font-weight: bold; color: #3730a3;">Lignes concernées par l'Info Trafic d'accueil :</label>
+            <label style="font-size: 12px; font-weight: bold; color: var(--primary);">Lignes concernées par l'Info Trafic :</label>
             <div id="login-lines-checkboxes" class="checkbox-grid"></div>
           </div>
         </details>
 
-        <!-- MENU 3 : GESTION DES MÉDIAS DU RÉSEAU -->
+        <!-- MENU 3 : GESTION DES MÉDIAS -->
         <details class="pcc-dropdown">
           <summary>🖼️ 3. Gestion des Médias & Visuels</summary>
           <div class="pcc-dropdown-content">
-            <label style="font-size: 12px; font-weight: bold; color: #7c3aed;">Logo / Image de chargement (Ouverture de l'app)</label>
-            <input type="file" id="input-splash-logo" accept="image/*" style="background: #ffffff;">
+            <label style="font-size: 12px; font-weight: bold; color: #a78bfa;">Logo / Image de chargement (Ouverture app)</label>
+            <input type="file" id="input-splash-logo" accept="image/*" style="background: var(--input-bg);">
 
             <label style="font-size: 12px; font-weight: bold;">Photo d'accueil / Bus du réseau</label>
-            <input type="file" id="input-bus-photo" accept="image/*" style="background: #ffffff;">
+            <input type="file" id="input-bus-photo" accept="image/*" style="background: var(--input-bg);">
 
             <label style="font-size: 12px; font-weight: bold;">Importer le Plan du Réseau (PDF)</label>
-            <input type="file" id="input-pdf-file" accept="application/pdf" style="background: #ffffff;">
+            <input type="file" id="input-pdf-file" accept="application/pdf" style="background: var(--input-bg);">
 
             <label style="font-size: 12px; font-weight: bold;">Photo de Naatan (Régulateur)</label>
-            <input type="file" id="input-regulator-photo" accept="image/*" style="background: #ffffff;">
+            <input type="file" id="input-regulator-photo" accept="image/*" style="background: var(--input-bg);">
 
             <label style="font-size: 12px; font-weight: bold;">Photo de Romain (Conducteur)</label>
-            <input type="file" id="input-driver-photo" accept="image/*" style="background: #ffffff;">
+            <input type="file" id="input-driver-photo" accept="image/*" style="background: var(--input-bg);">
           </div>
         </details>
 
-        <!-- Bouton global de sauvegarde -->
         <button id="save-btn" style="background: #16a34a; margin-top: 10px; font-size: 15px; padding: 14px;">Mettre à jour et Transmettre 🚀</button>
       </div>
 
@@ -646,10 +681,10 @@
     <div id="tab-plan" class="tab-content hidden">
       <div class="card" style="text-align: center;">
         <h3 style="color: var(--primary); margin-bottom: 10px;">🗺️ Plan du Réseau</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Cliquez sur le plan pour l'agrandir en grand format.</p>
+        <p style="font-size: 12px; opacity: 0.7; margin-bottom: 15px;">Cliquez sur le plan pour l'agrandir en grand format.</p>
         
         <div id="plan-container">
-          <p id="plan-status-txt" style="font-size: 13px; font-weight: bold; color: #475569; margin-bottom: 10px;">Aucun plan PDF mis en ligne pour le moment.</p>
+          <p id="plan-status-txt" style="font-size: 13px; font-weight: bold; margin-bottom: 10px;">Aucun plan PDF mis en ligne pour le moment.</p>
           
           <div id="plan-wrapper-box" class="plan-wrapper hidden">
             <embed id="embedded-pdf-view" src="" type="application/pdf" class="embedded-plan" />
@@ -663,7 +698,7 @@
     <div id="tab-history" class="tab-content hidden">
       <div class="card">
         <h3 style="color: var(--primary); margin-bottom: 5px;">📁 Mes Derniers Services</h3>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Historique de vos 10 derniers services enregistrés.</p>
+        <p style="font-size: 12px; opacity: 0.7; margin-bottom: 15px;">Historique de vos 10 derniers services enregistrés.</p>
         
         <div id="history-list-container">
           <p style="font-size: 12px; color: #94a3b8; text-align: center; padding: 20px;">Aucun service enregistré pour le moment.</p>
