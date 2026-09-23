@@ -3,6 +3,12 @@
 // ==========================================
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1551679598251741324/FIa2Aeai9RSSVS4lXxb0acfEhbVKds0hQnGsSRVRH60jhscIBIzvqy7N7sa3atNsnio2";
 
+// Les IDs Discord des utilisateurs pour les pings automatiques
+const DISCORD_IDS = {
+  "1805": "<@833857238741155860>", // Naatan
+  "1942": "<@1134003126261776404>"  // Romain
+};
+
 async function envoyerAlerteDiscord(titre, message) {
   try {
     await fetch(DISCORD_WEBHOOK_URL, {
@@ -174,7 +180,8 @@ const firebaseConfig = {
     pdfName: '',
     serviceRequest: null,
     planningRequest: null,
-    serviceVersion: 1
+    serviceVersion: 1,
+    messages: [] // Tableau des messages pour la messagerie en temps réel
   };
 
   let currentUser = null;
@@ -182,7 +189,6 @@ const firebaseConfig = {
   let isManualFallbackActive = false;
   let isManualPlanningFallbackActive = false;
 
-  // État local du service en cours (V2)
   let activeService = null;
   let activeServiceTimer = null;
 
@@ -195,6 +201,9 @@ const firebaseConfig = {
 
     if (tabId === 'history' && currentUser) {
       renderHistory();
+    }
+    if (tabId === 'chat') {
+      renderChat();
     }
   }
 
@@ -231,6 +240,7 @@ const firebaseConfig = {
       const oldPlanning = state.planningRequest;
       state = data;
       render();
+      renderChat(); // Met à jour le chat en temps réel dès que Firebase change
 
       if (currentUser && currentUser.role === 'REGULATEUR') {
         if (state.serviceRequest && state.serviceRequest.status === 'pending') {
@@ -310,6 +320,91 @@ const firebaseConfig = {
       reader.readAsDataURL(file);
     }
   });
+
+  // ==========================================
+  // GESTION DE LA MESSAGERIE (V2)
+  // ==========================================
+  function renderChat() {
+    const container = document.getElementById('chat-messages-container');
+    if (!container) return;
+
+    const messages = state.messages || [];
+    if (messages.length === 0) {
+      container.innerHTML = `<p style="font-size: 12px; color: #94a3b8; text-align: center; margin: auto;">Aucun message pour le moment. Lancez la discussion !</p>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    messages.forEach(msg => {
+      const userCode = Object.keys(USERS).find(k => USERS[k].name === currentUser?.name);
+      const isMe = currentUser && msg.senderCode === userCode;
+      
+      const div = document.createElement('div');
+      div.style.cssText = `
+        max-width: 80%;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.4;
+        align-self: ${isMe ? 'flex-end' : 'flex-start'};
+        background: ${isMe ? '#e0f2fe' : '#ffffff'};
+        border: 1px solid ${isMe ? '#bae6fd' : 'var(--border)'};
+        color: #1e293b;
+      `;
+      
+      div.innerHTML = `
+        <div style="font-size: 10px; font-weight: bold; color: #0284c7; margin-bottom: 2px;">${msg.senderName}</div>
+        <div>${msg.text}</div>
+        <div style="font-size: 9px; color: #94a3b8; text-align: right; margin-top: 2px;">${msg.time}</div>
+      `;
+      container.appendChild(div);
+    });
+
+    container.scrollTop = container.scrollHeight;
+  }
+
+  document.getElementById('chat-send-btn').addEventListener('click', envoyerMessageChat);
+  document.getElementById('chat-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') envoyerMessageChat();
+  });
+
+  function envoyerMessageChat() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !currentUser) return;
+
+    const userCode = Object.keys(USERS).find(k => USERS[k].name === currentUser.name);
+    const timeFormatted = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    const nouveauMessage = {
+      senderCode: userCode,
+      senderName: currentUser.name,
+      text: text,
+      time: timeFormatted,
+      timestamp: Date.now()
+    };
+
+    if (!state.messages) state.messages = [];
+    state.messages.push(nouveauMessage);
+
+    if (state.messages.length > 50) {
+      state.messages = state.messages.slice(state.messages.length - 50);
+    }
+
+    stateRef.set(state).then(() => {
+      input.value = '';
+
+      // Détermine qui mentionner sur Discord (si Naatan écrit, ping Romain, et vice versa)
+      const destinataireId = userCode === "1805" ? DISCORD_IDS["1942"] : DISCORD_IDS["1805"];
+
+      envoyerAlerteDiscord(
+        "💬 Nouveau message PDORegul",
+        `${destinataireId} **${currentUser.name}** vous a envoyé un message :\n> "${text}"`
+      );
+    }).catch(err => {
+      console.error("Erreur d'envoi de message :", err);
+    });
+  }
 
   // ==========================================
   // GESTION DU SERVICE ACTIF & HISTORIQUE (V2)
@@ -655,21 +750,156 @@ const firebaseConfig = {
       document.getElementById('input-prise').value = state.prise;
       document.getElementById('input-fin').value = state.fin;
       document.getElementById('input-notes').value = state.notes;
-      document.getElementById('input-alerte').value = state.alerte;
-      document.getElementById('input-login-info').value = state.loginInfo || '';
-
-      const checkboxes = document.querySelectorAll('.login-line-chk');
-      checkboxes.forEach(chk => {
-        chk.checked = state.loginLines && state.loginLines.includes(chk.value);
-      });
     } else {
       document.getElementById('driver-view').classList.remove('hidden');
       document.getElementById('regulator-view').classList.add('hidden');
       document.getElementById('driver-user-name').textContent = currentUser.name;
-      localServiceVersion = state.serviceVersion || 1;
     }
+
     render();
+    renderChat();
   }
+
+  document.getElementById('login-btn').addEventListener('click', () => {
+    const matricule = document.getElementById('matricule-input').value.trim();
+    const loader = document.getElementById('fake-loader-screen');
+    const errorTxt = document.getElementById('error-txt');
+
+    if (USERS[matricule]) {
+      errorTxt.style.display = 'none';
+      loader.classList.remove('hidden');
+      setTimeout(() => {
+        loader.classList.add('hidden');
+        loginUser(matricule);
+      }, 800);
+    } else {
+      errorTxt.style.display = 'block';
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.removeItem('palme_dor_user');
+    currentUser = null;
+    document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('main-nav-bar').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('matricule-input').value = '';
+  });
+
+  document.getElementById('save-btn').addEventListener('click', () => {
+    if (!currentUser || currentUser.role !== 'REGULATEUR') return;
+
+    state.ligneId = selectLigne.value;
+    state.bus = selectBus.value;
+    state.prise = document.getElementById('input-prise').value;
+    state.fin = document.getElementById('input-fin').value;
+    state.notes = document.getElementById('input-notes').value;
+    state.alerte = document.getElementById('input-alerte').value;
+    state.loginInfo = document.getElementById('input-login-info').value;
+
+    const checkedLines = [];
+    document.querySelectorAll('.login-line-chk:checked').forEach(chk => {
+      checkedLines.push(chk.value);
+    });
+    state.loginLines = checkedLines;
+
+    if (tempSplashLogo) state.splashLogo = tempSplashLogo;
+    if (tempBusPhoto) state.busPhoto = tempBusPhoto;
+    if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
+    if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
+    if (tempPdfData) {
+      state.pdfData = tempPdfData;
+      state.pdfName = tempPdfName;
+    }
+
+    state.serviceVersion = (state.serviceVersion || 1) + 1;
+
+    stateRef.set(state).then(() => {
+      envoyerAlerteDiscord("📢 Mise à jour Réseau (PCC)", `Le régulateur a mis à jour les directives et affectations du réseau.`);
+      alert('Modifications enregistrées et transmises avec succès !');
+    }).catch(err => {
+      console.error(err);
+      alert('Erreur lors de la sauvegarde.');
+    });
+  });
+
+  // Boutons Régulateur : Service propre
+  document.getElementById('regulator-start-service-btn').addEventListener('click', () => {
+    const l = document.getElementById('regulator-self-ligne').value.trim() || '1';
+    const b = document.getElementById('regulator-self-bus').value.trim() || '1942';
+    startActiveService({
+      ligne: l,
+      bus: `Véhicule ${b}`,
+      lieu: 'PC Central / Régulation'
+    });
+    alert('Prise de service PCC démarrée !');
+  });
+
+  // Boutons Régulateur : Demande de Service de Romain
+  document.getElementById('accept-req-btn').addEventListener('click', () => {
+    if (state.serviceRequest) {
+      state.serviceRequest.status = 'accepted';
+      stateRef.set(state);
+    }
+  });
+  document.getElementById('refuse-req-btn').addEventListener('click', () => {
+    if (state.serviceRequest) {
+      state.serviceRequest.status = 'refused';
+      stateRef.set(state);
+    }
+  });
+
+  // Boutons Conducteur : Demande de Service
+  document.getElementById('submit-service-btn').addEventListener('click', () => {
+    const busNum = document.getElementById('driver-input-bus').value.trim();
+    const ligne = document.getElementById('driver-input-ligne').value.trim();
+    const lieu = document.getElementById('driver-input-lieu').value.trim();
+
+    if (!busNum || !ligne || !lieu) {
+      alert("Veuillez remplir tous les champs de la demande de service.");
+      return;
+    }
+
+    state.serviceRequest = {
+      busNum: busNum,
+      ligne: ligne,
+      lieu: lieu,
+      status: 'pending',
+      timestamp: Date.now()
+    };
+
+    stateRef.set(state).then(() => {
+      envoyerAlerteDiscord("🚨 Demande de Service", `${DISCORD_IDS["1805"]} Le conducteur Romain demande un service (Ligne ${ligne}, Bus ${busNum}, Lieu: ${lieu}).`);
+      render();
+    });
+  });
+
+  // Boutons Régulateur : Demande de Planning de Romain
+  document.getElementById('accept-planning-btn').addEventListener('click', () => {
+    if (state.planningRequest) {
+      state.planningRequest.status = 'accepted';
+      stateRef.set(state);
+    }
+  });
+  document.getElementById('refuse-planning-btn').addEventListener('click', () => {
+    if (state.planningRequest) {
+      state.planningRequest.status = 'refused';
+      stateRef.set(state);
+    }
+  });
+
+  // Boutons Conducteur : Demande de Planning
+  document.getElementById('planning-request-btn').addEventListener('click', () => {
+    state.planningRequest = {
+      status: 'pending',
+      timestamp: Date.now()
+    };
+
+    stateRef.set(state).then(() => {
+      envoyerAlerteDiscord("🗓️ Demande de Planning", `${DISCORD_IDS["1805"]} Le conducteur Romain demande une modification de planning.`);
+      render();
+    });
+  });
 
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
@@ -683,142 +913,5 @@ const firebaseConfig = {
           loginUser(savedMatricule);
         }
       }, 500);
-    }, 2000);
-  });
-
-  document.getElementById('login-btn').addEventListener('click', () => {
-    const code = document.getElementById('matricule-input').value.trim();
-    if (USERS[code]) {
-      document.getElementById('error-txt').style.display = 'none';
-      document.getElementById('fake-loader-screen').classList.remove('hidden');
-
-      setTimeout(() => {
-        document.getElementById('fake-loader-screen').classList.add('hidden');
-        loginUser(code);
-      }, 3000);
-
-    } else {
-      document.getElementById('error-txt').style.display = 'block';
-    }
-  });
-
-  document.getElementById('planning-request-btn').addEventListener('click', () => {
-    isManualPlanningFallbackActive = false;
-    state.planningRequest = { status: 'pending', timestamp: Date.now() };
-    stateRef.set(state);
-    
-    envoyerAlerteDiscord("🗓️ Demande de Planning", "Romain (Conducteur) vient de demander une modification de planning !");
-  });
-
-  document.getElementById('accept-planning-btn').addEventListener('click', () => {
-    if (state.planningRequest) {
-      state.planningRequest.status = 'accepted';
-      stateRef.set(state);
-    }
-  });
-
-  document.getElementById('refuse-planning-btn').addEventListener('click', () => {
-    if (state.planningRequest) {
-      state.planningRequest.status = 'refused';
-      stateRef.set(state);
-    }
-  });
-
-  document.getElementById('submit-service-btn').addEventListener('click', () => {
-    const busNum = document.getElementById('driver-input-bus').value.trim();
-    const ligne = document.getElementById('driver-input-ligne').value.trim();
-    const lieu = document.getElementById('driver-input-lieu').value.trim();
-
-    if (!busNum || !ligne || !lieu) {
-      alert('Veuillez remplir tous les champs de la prise de service.');
-      return;
-    }
-
-    isManualFallbackActive = false;
-    state.serviceRequest = { busNum, ligne, lieu, status: 'pending', timestamp: Date.now() };
-    stateRef.set(state);
-
-    envoyerAlerteDiscord("🚍 Nouvelle Prise de Service", `Romain demande un service avec le bus ${busNum} sur la ligne ${ligne} (${lieu}).`);
-  });
-
-  document.getElementById('accept-req-btn').addEventListener('click', () => {
-    if (state.serviceRequest) {
-      state.serviceRequest.status = 'accepted';
-      stateRef.set(state);
-
-      startActiveService({
-        ligne: state.serviceRequest.ligne,
-        bus: `Bus ${state.serviceRequest.busNum}`,
-        lieu: state.serviceRequest.lieu
-      });
-    }
-  });
-
-  document.getElementById('refuse-req-btn').addEventListener('click', () => {
-    if (state.serviceRequest) {
-      state.serviceRequest.status = 'refused';
-      stateRef.set(state);
-    }
-  });
-
-  document.getElementById('regulator-start-service-btn').addEventListener('click', () => {
-    const ligne = document.getElementById('regulator-self-ligne').value.trim();
-    const bus = document.getElementById('regulator-self-bus').value.trim();
-
-    if (!ligne || !bus) {
-      alert('Veuillez renseigner votre ligne et votre véhicule.');
-      return;
-    }
-
-    startActiveService({
-      ligne: ligne,
-      bus: `Bus ${bus}`,
-      lieu: 'PCC / Régulation'
-    });
-
-    envoyerAlerteDiscord("🟢 Régulation en Service", `Naatan (Régulateur) a pris son service sur la ligne ${ligne} (${bus}).`);
-  });
-
-  document.getElementById('save-btn').addEventListener('click', () => {
-    state.ligneId = selectLigne.value;
-    state.bus = selectBus.value;
-    state.prise = document.getElementById('input-prise').value;
-    state.fin = document.getElementById('input-fin').value;
-    state.notes = document.getElementById('input-notes').value;
-    state.alerte = document.getElementById('input-alerte').value;
-    state.loginInfo = document.getElementById('input-login-info').value;
-    
-    const selectedLines = [];
-    document.querySelectorAll('.login-line-chk:checked').forEach(chk => {
-      selectedLines.push(chk.value);
-    });
-    state.loginLines = selectedLines;
-
-    state.serviceVersion = (state.serviceVersion || 1) + 1;
-
-    if (tempSplashLogo) state.splashLogo = tempSplashLogo;
-    if (tempBusPhoto) state.busPhoto = tempBusPhoto;
-    if (tempRegulatorPhoto) state.regulatorPhoto = tempRegulatorPhoto;
-    if (tempDriverPhoto) state.driverPhoto = tempDriverPhoto;
-    if (tempPdfData) {
-      state.pdfData = tempPdfData;
-      state.pdfName = tempPdfName;
-    }
-
-    stateRef.set(state).then(() => {
-      alert('Mises à jour transmises au réseau Palme d\'Or !');
-      
-      if (state.alerte && state.alerte.trim() !== '') {
-        envoyerAlerteDiscord("⚠️ Alerte Réseau / PCC", state.alerte);
-      } else {
-        envoyerAlerteDiscord("📢 Mise à jour PDORegul", "Le régulateur a publié de nouvelles informations sur le réseau.");
-      }
-    }).catch(err => {
-      alert('Erreur : ' + err.message);
-    });
-  });
-
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    localStorage.removeItem('palme_dor_user');
-    location.reload();
+    }, 1500);
   });
