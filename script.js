@@ -739,7 +739,7 @@ const firebaseConfig = {
     if (e.target && e.target.classList.contains('reset-request-btn')) {
       isManualFallbackActive = false;
       state.serviceRequest = null;
-      stateRef.set(state);
+      db.ref('palme_dor_state/serviceRequest').set(null);
     }
 
     if (e.target && e.target.id === 'manual-planning-fallback-btn') {
@@ -749,7 +749,7 @@ const firebaseConfig = {
     if (e.target && e.target.classList.contains('reset-planning-btn')) {
       isManualPlanningFallbackActive = false;
       state.planningRequest = null;
-      stateRef.set(state);
+      db.ref('palme_dor_state/planningRequest').set(null);
     }
 
     if (e.target && e.target.id === 'end-service-btn') {
@@ -867,14 +867,12 @@ const firebaseConfig = {
 
   document.getElementById('accept-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
-      state.serviceRequest.status = 'accepted';
-      stateRef.set(state);
+      db.ref('palme_dor_state/serviceRequest/status').set('accepted');
     }
   });
   document.getElementById('refuse-req-btn').addEventListener('click', () => {
     if (state.serviceRequest) {
-      state.serviceRequest.status = 'refused';
-      stateRef.set(state);
+      db.ref('palme_dor_state/serviceRequest/status').set('refused');
     }
   });
 
@@ -888,7 +886,7 @@ const firebaseConfig = {
       return;
     }
 
-    state.serviceRequest = {
+    const newServiceReq = {
       busNum: busNum,
       ligne: ligne,
       lieu: lieu,
@@ -896,34 +894,38 @@ const firebaseConfig = {
       timestamp: Date.now()
     };
 
-    stateRef.set(state).then(() => {
+    db.ref('palme_dor_state/serviceRequest').set(newServiceReq).then(() => {
       envoyerAlerteDiscord("🚨 Demande de Service", `${DISCORD_IDS["1805"]} Le conducteur Romain demande un service (Ligne ${ligne}, Bus ${busNum}, Lieu: ${lieu}).`);
-      render();
+      alert("Demande transmise au régulateur !");
+    }).catch(err => {
+      console.error("Erreur Firebase :", err);
+      alert("Erreur lors de l'envoi de la demande.");
     });
   });
 
   document.getElementById('accept-planning-btn').addEventListener('click', () => {
     if (state.planningRequest) {
-      state.planningRequest.status = 'accepted';
-      stateRef.set(state);
+      db.ref('palme_dor_state/planningRequest/status').set('accepted');
     }
   });
   document.getElementById('refuse-planning-btn').addEventListener('click', () => {
     if (state.planningRequest) {
-      state.planningRequest.status = 'refused';
-      stateRef.set(state);
+      db.ref('palme_dor_state/planningRequest/status').set('refused');
     }
   });
 
   document.getElementById('planning-request-btn').addEventListener('click', () => {
-    state.planningRequest = {
+    const newPlanningReq = {
       status: 'pending',
       timestamp: Date.now()
     };
 
-    stateRef.set(state).then(() => {
+    db.ref('palme_dor_state/planningRequest').set(newPlanningReq).then(() => {
       envoyerAlerteDiscord("🗓️ Demande de Planning", `${DISCORD_IDS["1805"]} Le conducteur Romain demande une modification de planning.`);
-      render();
+      alert("Demande de planning transmise !");
+    }).catch(err => {
+      console.error("Erreur Firebase :", err);
+      alert("Erreur lors de l'envoi du planning.");
     });
   });
 
