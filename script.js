@@ -281,11 +281,14 @@ const firebaseConfig = {
         if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
           if (state.serviceRequest.status === 'accepted') {
             new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
+            
+            // Lancement automatique de l'écran de service actif pour Romain
             startActiveService({
               ligne: state.serviceRequest.ligne,
               bus: `Bus ${state.serviceRequest.busNum}`,
-              lieu: state.serviceRequest.lieu
+              lieu: state.serviceRequest.lieu || 'Prise de service validée'
             });
+
           } else if (state.serviceRequest.status === 'refused') {
             new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
           }
