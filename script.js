@@ -281,14 +281,6 @@ const firebaseConfig = {
         if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
           if (state.serviceRequest.status === 'accepted') {
             new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
-            
-            // Lancement automatique de l'écran de service actif pour Romain
-            startActiveService({
-              ligne: state.serviceRequest.ligne,
-              bus: `Bus ${state.serviceRequest.busNum}`,
-              lieu: state.serviceRequest.lieu || 'Prise de service validée'
-            });
-
           } else if (state.serviceRequest.status === 'refused') {
             new Notification("❌ Prise de service refusée", { body: `Votre demande a été refusée par le régulateur.` });
           }
@@ -719,6 +711,22 @@ const firebaseConfig = {
           }
         } else if (state.serviceRequest.status === 'accepted') {
           boxAccepted.classList.remove('hidden');
+          
+          // Injection dynamique du bouton "Ouvrir mon service" dans la boîte acceptée si besoin, 
+          // ou s'il est déjà présent dans le HTML, il s'affichera directement.
+          const acceptedBox = document.getElementById('status-box-accepted');
+          if (acceptedBox && !document.getElementById('open-active-service-btn')) {
+            acceptedBox.innerHTML = `
+              ✅ Prise de service ACCEPTÉE par le PCC !<br>
+              <button id="open-active-service-btn" style="margin-top: 10px; padding: 10px; font-size: 13px; font-weight: bold; background: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;">
+                🚀 Ouvrir mon service
+              </button><br>
+              <button class="reset-request-btn" style="margin-top: 8px; padding: 6px; font-size: 11px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+                Annuler / Refaire une demande
+              </button>
+            `;
+          }
+
         } else if (state.serviceRequest.status === 'refused') {
           boxRefused.classList.remove('hidden');
         }
@@ -735,6 +743,17 @@ const firebaseConfig = {
   });
 
   document.addEventListener('click', (e) => {
+    // Gestion du clic sur le nouveau bouton "Ouvrir mon service"
+    if (e.target && e.target.id === 'open-active-service-btn') {
+      if (state.serviceRequest && state.serviceRequest.status === 'accepted') {
+        startActiveService({
+          ligne: state.serviceRequest.ligne,
+          bus: `Bus ${state.serviceRequest.busNum}`,
+          lieu: state.serviceRequest.lieu || 'Prise de service validée'
+        });
+      }
+    }
+
     if (e.target && e.target.id === 'manual-fallback-btn') {
       isManualFallbackActive = true;
       render();
