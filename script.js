@@ -712,8 +712,6 @@ const firebaseConfig = {
         } else if (state.serviceRequest.status === 'accepted') {
           boxAccepted.classList.remove('hidden');
           
-          // Injection dynamique du bouton "Ouvrir mon service" dans la boîte acceptée si besoin, 
-          // ou s'il est déjà présent dans le HTML, il s'affichera directement.
           const acceptedBox = document.getElementById('status-box-accepted');
           if (acceptedBox && !document.getElementById('open-active-service-btn')) {
             acceptedBox.innerHTML = `
@@ -743,7 +741,12 @@ const firebaseConfig = {
   });
 
   document.addEventListener('click', (e) => {
-    // Gestion du clic sur le nouveau bouton "Ouvrir mon service"
+    // 👉 Fermeture du pop-up d'info trafic
+    if (e.target && (e.target.id === 'close-traffic-modal' || e.target.id === 'ok-traffic-modal' || e.target.id === 'traffic-modal')) {
+      document.getElementById('traffic-modal').classList.add('hidden');
+    }
+
+    // Gestion du clic sur le bouton "Ouvrir mon service"
     if (e.target && e.target.id === 'open-active-service-btn') {
       if (state.serviceRequest && state.serviceRequest.status === 'accepted') {
         startActiveService({
@@ -787,6 +790,12 @@ const firebaseConfig = {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     document.getElementById('main-nav-bar').classList.remove('hidden');
+
+    // 👉 Affichage automatique du pop-up d'info trafic à la connexion
+    if (state.loginInfo && state.loginInfo.trim() !== "") {
+      document.getElementById('modal-traffic-text').textContent = state.loginInfo;
+      document.getElementById('traffic-modal').classList.remove('hidden');
+    }
 
     const savedActive = sessionStorage.getItem('pdo_active_service_' + code);
     if (savedActive) {
