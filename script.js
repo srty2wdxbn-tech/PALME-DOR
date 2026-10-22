@@ -30,9 +30,11 @@ const firebaseConfig = {
   projectId: "espace-personnel---pdo",
   storageBucket: "espace-personnel---pdo.firebasestorage.app",
   messagingSenderId: "808450248683",
-  appId: "1:808450248683:web:10bf43e54f7796264093ae"
+  appId: "1:808450248683:web:10bf43e54f7796264093ae",
+  measurementId: "G-4WJ4QYEP88"
 };
 
+// Initialisation Firebase (Compat)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const stateRef = db.ref('palme_dor_state');
@@ -45,16 +47,4 @@ if ('serviceWorker' in navigator) {
 
 const notifBanner = document.getElementById('notif-banner');
 if (notifBanner && "Notification" in window && Notification.permission === "default") {
-  notifBanner.classList.remove('hidden');
-}
-
-document.getElementById('enable-notif-btn')?.addEventListener('click', async () => {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      notifBanner?.classList.add('hidden');
-      new Notification("PDORegul", { body: "Notifications activées !" });
-    } else {
-      alert("Notifications refusées.");
-    }
-  } catch (e)
+  notifBanner.classList.remove
