@@ -185,7 +185,7 @@ const firebaseConfig = {
     pdfName: '',
     serviceRequest: null,
     planningRequest: null,
-    driverNotification: null, // Ajout V2.2 pour la notification ciblée
+    driverNotification: null,
     serviceVersion: 1,
     messages: []
   };
@@ -802,13 +802,14 @@ const firebaseConfig = {
     document.getElementById('fullscreenModal')?.classList.add('hidden');
   });
 
+  // Gestion sécurisée des clics globaux avec .closest()
   document.addEventListener('click', (e) => {
-    if (e.target && (e.target.id === 'close-traffic-modal' || e.target.id === 'ok-traffic-modal' || e.target.id === 'traffic-modal')) {
+    if (e.target.closest('#close-traffic-modal') || e.target.closest('#ok-traffic-modal') || e.target.id === 'traffic-modal') {
       document.getElementById('traffic-modal')?.classList.add('hidden');
     }
 
     // Gestion du clic sur "Marquer comme lu" par Romain (V2.2)
-    if (e.target && e.target.id === 'mark-notification-read-btn') {
+    if (e.target.closest('#mark-notification-read-btn')) {
       db.ref('palme_dor_state/driverNotification').set(null).then(() => {
         envoyerAlerteDiscord(
           "🟢 Notification lue",
@@ -817,10 +818,11 @@ const firebaseConfig = {
         alert("Notification marquée comme lue ! Le PCC a été informé.");
       }).catch(err => {
         console.error("Erreur :", err);
+        alert("Erreur lors de l'acquittement de la notification.");
       });
     }
 
-    if (e.target && e.target.id === 'open-active-service-btn') {
+    if (e.target.closest('#open-active-service-btn')) {
       if (state.serviceRequest && state.serviceRequest.status === 'accepted') {
         startActiveService({
           ligne: state.serviceRequest.ligne,
@@ -830,27 +832,27 @@ const firebaseConfig = {
       }
     }
 
-    if (e.target && e.target.id === 'manual-fallback-btn') {
+    if (e.target.closest('#manual-fallback-btn')) {
       isManualFallbackActive = true;
       render();
     }
-    if (e.target && e.target.classList.contains('reset-request-btn')) {
+    if (e.target.closest('.reset-request-btn')) {
       isManualFallbackActive = false;
       state.serviceRequest = null;
       db.ref('palme_dor_state/serviceRequest').set(null);
     }
 
-    if (e.target && e.target.id === 'manual-planning-fallback-btn') {
+    if (e.target.closest('#manual-planning-fallback-btn')) {
       isManualPlanningFallbackActive = true;
       render();
     }
-    if (e.target && e.target.classList.contains('reset-planning-btn')) {
+    if (e.target.closest('.reset-planning-btn')) {
       isManualPlanningFallbackActive = false;
       state.planningRequest = null;
       db.ref('palme_dor_state/planningRequest').set(null);
     }
 
-    if (e.target && e.target.id === 'end-service-btn') {
+    if (e.target.closest('#end-service-btn')) {
       endActiveService();
     }
   });
@@ -985,7 +987,10 @@ const firebaseConfig = {
   // ENVOI DE LA NOTIFICATION CIBLÉE (V2.2)
   // ==========================================
   document.getElementById('regulator-send-notif-btn')?.addEventListener('click', () => {
-    if (!currentUser || currentUser.role !== 'REGULATEUR') return;
+    if (!currentUser || currentUser.role !== 'REGULATEUR') {
+      alert("Action réservée au régulateur connecté !");
+      return;
+    }
     const notifInput = document.getElementById('regulator-notif-input');
     const notifText = notifInput ? notifInput.value.trim() : '';
 
