@@ -46,15 +46,15 @@ const firebaseConfig = {
   }
 
   const notifBanner = document.getElementById('notif-banner');
-  if ("Notification" in window && Notification.permission === "default") {
+  if (notifBanner && "Notification" in window && Notification.permission === "default") {
     notifBanner.classList.remove('hidden');
   }
 
-  document.getElementById('enable-notif-btn').addEventListener('click', async () => {
+  document.getElementById('enable-notif-btn')?.addEventListener('click', async () => {
     try {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
-        notifBanner.classList.add('hidden');
+        notifBanner?.classList.add('hidden');
         new Notification("PDORegul", { body: "Notifications activées !" });
       } else {
         alert("Notifications refusées.");
@@ -185,6 +185,7 @@ const firebaseConfig = {
     pdfName: '',
     serviceRequest: null,
     planningRequest: null,
+    driverNotification: null, // Ajout V2.2 pour la notification ciblée
     serviceVersion: 1,
     messages: []
   };
@@ -216,10 +217,10 @@ const firebaseConfig = {
 
   function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById('tab-' + tabId).classList.remove('hidden');
+    document.getElementById('tab-' + tabId)?.classList.remove('hidden');
 
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    event.currentTarget.closest('.nav-item').classList.add('active');
+    event?.currentTarget?.closest('.nav-item')?.classList.add('active');
 
     if (tabId === 'history' && currentUser) {
       renderHistory();
@@ -230,36 +231,44 @@ const firebaseConfig = {
   }
 
   const selectLigne = document.getElementById('select-ligne');
-  LIGNES.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l.id;
-    opt.textContent = l.id === 'AUCUNE' ? l.nom : `Ligne ${l.badge} : ${l.nom}`;
-    selectLigne.appendChild(opt);
-  });
+  if (selectLigne) {
+    LIGNES.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      opt.textContent = l.id === 'AUCUNE' ? l.nom : `Ligne ${l.badge} : ${l.nom}`;
+      selectLigne.appendChild(opt);
+    });
+  }
 
   const selectBus = document.getElementById('select-bus');
-  VEHICULES.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = v;
-    selectBus.appendChild(opt);
-  });
+  if (selectBus) {
+    VEHICULES.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      selectBus.appendChild(opt);
+    });
+  }
 
   const checkboxesContainer = document.getElementById('login-lines-checkboxes');
-  LIGNES.forEach(l => {
-    if (l.id !== 'AUCUNE') {
-      const label = document.createElement('label');
-      label.className = 'checkbox-item';
-      label.innerHTML = `<input type="checkbox" value="${l.id}" class="login-line-chk"> L.${l.badge}`;
-      checkboxesContainer.appendChild(label);
-    }
-  });
+  if (checkboxesContainer) {
+    LIGNES.forEach(l => {
+      if (l.id !== 'AUCUNE') {
+        const label = document.createElement('label');
+        label.className = 'checkbox-item';
+        label.innerHTML = `<input type="checkbox" value="${l.id}" class="login-line-chk"> L.${l.badge}`;
+        checkboxesContainer.appendChild(label);
+      }
+    });
+  }
 
   stateRef.on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
       const oldRequest = state.serviceRequest;
       const oldPlanning = state.planningRequest;
+      const oldNotif = state.driverNotification;
+
       state = data;
       render();
       renderChat();
@@ -278,6 +287,10 @@ const firebaseConfig = {
       }
 
       if (currentUser && currentUser.role === 'CONDUCTEUR') {
+        if (state.driverNotification && (!oldNotif || oldNotif.timestamp !== state.driverNotification.timestamp)) {
+          new Notification("🔔 Notification PCC", { body: state.driverNotification.text });
+        }
+
         if (oldRequest && oldRequest.status === 'pending' && state.serviceRequest) {
           if (state.serviceRequest.status === 'accepted') {
             new Notification("✅ Prise de service acceptée", { body: `Votre véhicule ${state.serviceRequest.busNum} est validé !` });
@@ -328,7 +341,7 @@ const firebaseConfig = {
   bindImageImport('input-regulator-photo', val => tempRegulatorPhoto = val);
   bindImageImport('input-driver-photo', val => tempDriverPhoto = val);
 
-  document.getElementById('input-pdf-file').addEventListener('change', function(e) {
+  document.getElementById('input-pdf-file')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
       tempPdfName = file.name;
@@ -364,15 +377,15 @@ const firebaseConfig = {
         font-size: 13px;
         line-height: 1.4;
         align-self: ${isMe ? 'flex-end' : 'flex-start'};
-        background: ${isMe ? 'var(--chat-bubble-me)' : 'var(--chat-bubble-other)'};
+        background: ${isMe ? 'var(--primary)' : 'var(--dropdown-bg)'};
+        color: ${isMe ? '#ffffff' : 'var(--text)'};
         border: 1px solid var(--border);
-        color: var(--text);
       `;
       
       div.innerHTML = `
-        <div style="font-size: 10px; font-weight: bold; color: var(--primary); margin-bottom: 2px;">${msg.senderName}</div>
+        <div style="font-size: 10px; font-weight: bold; opacity: 0.9; margin-bottom: 2px;">${msg.senderName}</div>
         <div>${msg.text}</div>
-        <div style="font-size: 9px; color: #94a3b8; text-align: right; margin-top: 2px;">${msg.time}</div>
+        <div style="font-size: 9px; opacity: 0.7; text-align: right; margin-top: 2px;">${msg.time}</div>
       `;
       container.appendChild(div);
     });
@@ -380,14 +393,14 @@ const firebaseConfig = {
     container.scrollTop = container.scrollHeight;
   }
 
-  document.getElementById('chat-send-btn').addEventListener('click', envoyerMessageChat);
-  document.getElementById('chat-input').addEventListener('keypress', (e) => {
+  document.getElementById('chat-send-btn')?.addEventListener('click', envoyerMessageChat);
+  document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') envoyerMessageChat();
   });
 
   function envoyerMessageChat() {
     const input = document.getElementById('chat-input');
-    const text = input.value.trim();
+    const text = input?.value.trim();
     if (!text || !currentUser) return;
 
     const userCode = Object.keys(USERS).find(k => USERS[k].name === currentUser.name);
@@ -409,7 +422,7 @@ const firebaseConfig = {
     }
 
     stateRef.set(state).then(() => {
-      input.value = '';
+      if (input) input.value = '';
       const destinataireId = userCode === "1805" ? DISCORD_IDS["1942"] : DISCORD_IDS["1805"];
 
       envoyerAlerteDiscord(
@@ -533,9 +546,9 @@ const firebaseConfig = {
     alert(`Signalement transmis avec succès : "${messageType}"`);
   };
 
-  document.getElementById('send-custom-signal-btn').addEventListener('click', () => {
+  document.getElementById('send-custom-signal-btn')?.addEventListener('click', () => {
     const txtArea = document.getElementById('custom-signal-txt');
-    const msg = txtArea.value.trim();
+    const msg = txtArea?.value.trim();
     if (!msg) {
       alert("Veuillez saisir un message personnalisé.");
       return;
@@ -544,7 +557,7 @@ const firebaseConfig = {
 
     const infoService = activeService ? `(Ligne ${activeService.ligne} - ${activeService.bus})` : '';
     envoyerAlerteDiscord("⚠️ Signalement Personnalisé", `${currentUser.name} ${infoService} :\n💬 *${msg}*`);
-    txtArea.value = '';
+    if (txtArea) txtArea.value = '';
     alert("Alerte personnalisée transmise sur Discord !");
   });
 
@@ -552,99 +565,148 @@ const firebaseConfig = {
     const ligne = LIGNES.find(l => l.id === state.ligneId) || LIGNES[1];
     
     const defaultLogoPlaceholder = 'https://via.placeholder.com/120?text=Logo';
-    document.getElementById('splash-logo-img').src = state.splashLogo || defaultLogoPlaceholder;
-    document.getElementById('login-bus-img').src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
-    document.getElementById('app-logo').src = state.busPhoto || 'https://via.placeholder.com/140x40?text=PDORegul';
+    const splashImg = document.getElementById('splash-logo-img');
+    if (splashImg) splashImg.src = state.splashLogo || defaultLogoPlaceholder;
+
+    const loginBusImg = document.getElementById('login-bus-img');
+    if (loginBusImg) loginBusImg.src = state.busPhoto || 'https://via.placeholder.com/400x170?text=Bus+Palme+d%27Or';
+
+    const appLogo = document.getElementById('app-logo');
+    if (appLogo) appLogo.src = state.busPhoto || 'https://via.placeholder.com/140x40?text=PDORegul';
     
-    document.getElementById('regulator-avatar').src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
-    document.getElementById('driver-avatar').src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
+    const regAvatar = document.getElementById('regulator-avatar');
+    if (regAvatar) regAvatar.src = state.regulatorPhoto || 'https://via.placeholder.com/150?text=Naatan';
+
+    const drvAvatar = document.getElementById('driver-avatar');
+    if (drvAvatar) drvAvatar.src = state.driverPhoto || 'https://via.placeholder.com/150?text=Romain';
     
     const planStatusTxt = document.getElementById('plan-status-txt');
     const planWrapperBox = document.getElementById('plan-wrapper-box');
     const embeddedPdfView = document.getElementById('embedded-pdf-view');
     const fullscreenPdfView = document.getElementById('fullscreen-pdf-view');
 
-    if (state.pdfData) {
+    if (state.pdfData && planStatusTxt && planWrapperBox) {
       planStatusTxt.textContent = `Plan : ${state.pdfName || 'Plan_Reseau.pdf'} (Cliquez pour agrandir)`;
-      embeddedPdfView.src = state.pdfData + "#toolbar=0&navpanes=0&scrollbar=0";
-      fullscreenPdfView.src = state.pdfData + "#toolbar=0";
+      if (embeddedPdfView) embeddedPdfView.src = state.pdfData + "#toolbar=0&navpanes=0&scrollbar=0";
+      if (fullscreenPdfView) fullscreenPdfView.src = state.pdfData + "#toolbar=0";
       planWrapperBox.classList.remove('hidden');
-    } else {
+    } else if (planStatusTxt && planWrapperBox) {
       planStatusTxt.textContent = 'Aucun plan PDF mis en ligne pour le moment.';
       planWrapperBox.classList.add('hidden');
     }
 
-    document.getElementById('login-info-text').textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
+    const loginInfoTxt = document.getElementById('login-info-text');
+    if (loginInfoTxt) loginInfoTxt.textContent = state.loginInfo || 'Module de prise de service optimisé. 🚍⚡';
 
     const loginBadgesContainer = document.getElementById('login-badges-container');
-    loginBadgesContainer.innerHTML = '';
-    if (state.loginLines && state.loginLines.length > 0) {
-      state.loginLines.forEach(lineId => {
-        const lObj = LIGNES.find(l => l.id === lineId);
-        if (lObj) {
-          const span = document.createElement('span');
-          span.className = 'badge';
-          span.textContent = lObj.badge;
-          span.style.backgroundColor = lObj.bg;
-          span.style.color = lObj.text;
-          loginBadgesContainer.appendChild(span);
-        }
-      });
+    if (loginBadgesContainer) {
+      loginBadgesContainer.innerHTML = '';
+      if (state.loginLines && state.loginLines.length > 0) {
+        state.loginLines.forEach(lineId => {
+          const lObj = LIGNES.find(l => l.id === lineId);
+          if (lObj) {
+            const span = document.createElement('span');
+            span.className = 'badge';
+            span.textContent = lObj.badge;
+            span.style.backgroundColor = lObj.bg;
+            span.style.color = lObj.text;
+            loginBadgesContainer.appendChild(span);
+          }
+        });
+      }
     }
 
     const alertBox = document.getElementById('alert-display');
-    if (state.alerte) {
-      alertBox.classList.remove('hidden');
-      document.getElementById('alert-text').textContent = state.alerte;
-    } else {
-      alertBox.classList.add('hidden');
+    if (alertBox) {
+      if (state.alerte) {
+        alertBox.classList.remove('hidden');
+        const alertTxt = document.getElementById('alert-text');
+        if (alertTxt) alertTxt.textContent = state.alerte;
+      } else {
+        alertBox.classList.add('hidden');
+      }
     }
 
     const badge = document.getElementById('line-badge');
-    badge.textContent = ligne.badge;
-    badge.style.backgroundColor = ligne.bg;
-    badge.style.color = ligne.text;
+    if (badge) {
+      badge.textContent = ligne.badge;
+      badge.style.backgroundColor = ligne.bg;
+      badge.style.color = ligne.text;
+    }
 
-    document.getElementById('line-name').textContent = ligne.nom;
-    document.getElementById('bus-num').textContent = state.bus;
-    document.getElementById('service-hours').textContent = `${state.prise} - ${state.fin}`;
-    document.getElementById('pcc-notes').textContent = state.notes || 'Aucune consigne particulière.';
+    const lineName = document.getElementById('line-name');
+    if (lineName) lineName.textContent = ligne.nom;
+
+    const busNum = document.getElementById('bus-num');
+    if (busNum) busNum.textContent = state.bus;
+
+    const serviceHours = document.getElementById('service-hours');
+    if (serviceHours) serviceHours.textContent = `${state.prise} - ${state.fin}`;
+
+    const pccNotes = document.getElementById('pcc-notes');
+    if (pccNotes) pccNotes.textContent = state.notes || 'Aucune consigne particulière.';
+
+    // Gestion de l'affichage de la notification urgente V2.2 chez le conducteur
+    const driverNotifBox = document.getElementById('driver-notification-box');
+    if (currentUser && currentUser.role === 'CONDUCTEUR' && driverNotifBox) {
+      if (state.driverNotification && state.driverNotification.text) {
+        const driverNotifTxt = document.getElementById('driver-notification-text');
+        if (driverNotifTxt) driverNotifTxt.textContent = state.driverNotification.text;
+        driverNotifBox.classList.remove('hidden');
+      } else {
+        driverNotifBox.classList.add('hidden');
+      }
+    }
 
     const activeServiceScreen = document.getElementById('active-service-screen');
-    if (activeService) {
-      activeServiceScreen.classList.remove('hidden');
-      
-      const ligneObj = LIGNES.find(l => l.id === activeService.ligne) || { badge: activeService.ligne, bg: '#22c55e', text: '#ffffff' };
-      const activeBadge = document.getElementById('active-line-badge');
-      activeBadge.textContent = ligneObj.badge;
-      activeBadge.style.backgroundColor = ligneObj.bg;
-      activeBadge.style.color = ligneObj.text;
+    if (activeServiceScreen) {
+      if (activeService) {
+        activeServiceScreen.classList.remove('hidden');
+        
+        const ligneObj = LIGNES.find(l => l.id === activeService.ligne) || { badge: activeService.ligne, bg: '#22c55e', text: '#ffffff' };
+        const activeBadge = document.getElementById('active-line-badge');
+        if (activeBadge) {
+          activeBadge.textContent = ligneObj.badge;
+          activeBadge.style.backgroundColor = ligneObj.bg;
+          activeBadge.style.color = ligneObj.text;
+        }
 
-      document.getElementById('active-line-name').textContent = `Ligne ${activeService.ligne}`;
-      document.getElementById('active-bus-info').textContent = `${activeService.bus} • ${activeService.lieu}`;
-      runActiveServiceTimer();
-    } else {
-      activeServiceScreen.classList.add('hidden');
+        const activeLineName = document.getElementById('active-line-name');
+        if (activeLineName) activeLineName.textContent = `Ligne ${activeService.ligne}`;
+
+        const activeBusInfo = document.getElementById('active-bus-info');
+        if (activeBusInfo) activeBusInfo.textContent = `${activeService.bus} • ${activeService.lieu}`;
+        runActiveServiceTimer();
+      } else {
+        activeServiceScreen.classList.add('hidden');
+      }
     }
 
     const planningAlert = document.getElementById('regulator-planning-alert');
-    if (state.planningRequest && state.planningRequest.status === 'pending') {
-      planningAlert.classList.remove('hidden');
-    } else {
-      planningAlert.classList.add('hidden');
+    if (planningAlert) {
+      if (state.planningRequest && state.planningRequest.status === 'pending') {
+        planningAlert.classList.remove('hidden');
+      } else {
+        planningAlert.classList.add('hidden');
+      }
     }
 
     const reqBox = document.getElementById('regulator-request-box');
-    if (state.serviceRequest && state.serviceRequest.status === 'pending') {
-      reqBox.classList.remove('hidden');
-      document.getElementById('req-details').innerHTML = `
-        <strong>Conducteur 1942 (Romain)</strong> vous demande un service :<br>
-        • Véhicule : <strong>${state.serviceRequest.busNum}</strong><br>
-        • Ligne : <strong>${state.serviceRequest.ligne}</strong><br>
-        • Lieu : <strong>${state.serviceRequest.lieu}</strong>
-      `;
-    } else {
-      reqBox.classList.add('hidden');
+    if (reqBox) {
+      if (state.serviceRequest && state.serviceRequest.status === 'pending') {
+        reqBox.classList.remove('hidden');
+        const reqDetails = document.getElementById('req-details');
+        if (reqDetails) {
+          reqDetails.innerHTML = `
+            <strong>Conducteur 1942 (Romain)</strong> vous demande un service :<br>
+            • Véhicule : <strong>${state.serviceRequest.busNum}</strong><br>
+            • Ligne : <strong>${state.serviceRequest.ligne}</strong><br>
+            • Lieu : <strong>${state.serviceRequest.lieu}</strong>
+          `;
+        }
+      } else {
+        reqBox.classList.add('hidden');
+      }
     }
 
     if (currentUser && currentUser.role === 'CONDUCTEUR') {
@@ -656,29 +718,29 @@ const firebaseConfig = {
       const pBoxAccepted = document.getElementById('planning-box-accepted');
       const pBoxRefused = document.getElementById('planning-box-refused');
 
-      pBoxPending.classList.add('hidden');
-      pBoxFallback.classList.add('hidden');
-      pBoxAccepted.classList.add('hidden');
-      pBoxRefused.classList.add('hidden');
+      if (pBoxPending) pBoxPending.classList.add('hidden');
+      if (pBoxFallback) pBoxFallback.classList.add('hidden');
+      if (pBoxAccepted) pBoxAccepted.classList.add('hidden');
+      if (pBoxRefused) pBoxRefused.classList.add('hidden');
 
       if (!state.planningRequest) {
-        planningForm.classList.remove('hidden');
-        planningStatus.classList.add('hidden');
+        planningForm?.classList.remove('hidden');
+        planningStatus?.classList.add('hidden');
         isManualPlanningFallbackActive = false;
       } else {
-        planningForm.classList.add('hidden');
-        planningStatus.classList.remove('hidden');
+        planningForm?.classList.add('hidden');
+        planningStatus?.classList.remove('hidden');
 
         if (state.planningRequest.status === 'pending') {
           if (isManualPlanningFallbackActive) {
-            pBoxFallback.classList.remove('hidden');
+            pBoxFallback?.classList.remove('hidden');
           } else {
-            pBoxPending.classList.remove('hidden');
+            pBoxPending?.classList.remove('hidden');
           }
         } else if (state.planningRequest.status === 'accepted') {
-          pBoxAccepted.classList.remove('hidden');
+          pBoxAccepted?.classList.remove('hidden');
         } else if (state.planningRequest.status === 'refused') {
-          pBoxRefused.classList.remove('hidden');
+          pBoxRefused?.classList.remove('hidden');
         }
       }
 
@@ -690,27 +752,27 @@ const firebaseConfig = {
       const boxAccepted = document.getElementById('status-box-accepted');
       const boxRefused = document.getElementById('status-box-refused');
 
-      boxPending.classList.add('hidden');
-      boxFallback.classList.add('hidden');
-      boxAccepted.classList.add('hidden');
-      boxRefused.classList.add('hidden');
+      if (boxPending) boxPending.classList.add('hidden');
+      if (boxFallback) boxFallback.classList.add('hidden');
+      if (boxAccepted) boxAccepted.classList.add('hidden');
+      if (boxRefused) boxRefused.classList.add('hidden');
 
       if (!state.serviceRequest) {
-        formContainer.classList.remove('hidden');
-        statusDisplay.classList.add('hidden');
+        formContainer?.classList.remove('hidden');
+        statusDisplay?.classList.add('hidden');
         isManualFallbackActive = false;
       } else {
-        formContainer.classList.add('hidden');
-        statusDisplay.classList.remove('hidden');
+        formContainer?.classList.add('hidden');
+        statusDisplay?.classList.remove('hidden');
 
         if (state.serviceRequest.status === 'pending') {
           if (isManualFallbackActive) {
-            boxFallback.classList.remove('hidden');
+            boxFallback?.classList.remove('hidden');
           } else {
-            boxPending.classList.remove('hidden');
+            boxPending?.classList.remove('hidden');
           }
         } else if (state.serviceRequest.status === 'accepted') {
-          boxAccepted.classList.remove('hidden');
+          boxAccepted?.classList.remove('hidden');
           
           const acceptedBox = document.getElementById('status-box-accepted');
           if (acceptedBox && !document.getElementById('open-active-service-btn')) {
@@ -726,27 +788,38 @@ const firebaseConfig = {
           }
 
         } else if (state.serviceRequest.status === 'refused') {
-          boxRefused.classList.remove('hidden');
+          boxRefused?.classList.remove('hidden');
         }
       }
     }
   }
 
-  document.getElementById('openFullscreenPlan').addEventListener('click', () => {
-    document.getElementById('fullscreenModal').classList.remove('hidden');
+  document.getElementById('openFullscreenPlan')?.addEventListener('click', () => {
+    document.getElementById('fullscreenModal')?.classList.remove('hidden');
   });
 
-  document.getElementById('closeModal').addEventListener('click', () => {
-    document.getElementById('fullscreenModal').classList.add('hidden');
+  document.getElementById('closeModal')?.addEventListener('click', () => {
+    document.getElementById('fullscreenModal')?.classList.add('hidden');
   });
 
   document.addEventListener('click', (e) => {
-    // 👉 Fermeture du pop-up d'info trafic
     if (e.target && (e.target.id === 'close-traffic-modal' || e.target.id === 'ok-traffic-modal' || e.target.id === 'traffic-modal')) {
-      document.getElementById('traffic-modal').classList.add('hidden');
+      document.getElementById('traffic-modal')?.classList.add('hidden');
     }
 
-    // Gestion du clic sur le bouton "Ouvrir mon service"
+    // Gestion du clic sur "Marquer comme lu" par Romain (V2.2)
+    if (e.target && e.target.id === 'mark-notification-read-btn') {
+      db.ref('palme_dor_state/driverNotification').set(null).then(() => {
+        envoyerAlerteDiscord(
+          "🟢 Notification lue",
+          `Le conducteur **${currentUser?.name}** (1942) a bien pris connaissance de son message.`
+        );
+        alert("Notification marquée comme lue ! Le PCC a été informé.");
+      }).catch(err => {
+        console.error("Erreur :", err);
+      });
+    }
+
     if (e.target && e.target.id === 'open-active-service-btn') {
       if (state.serviceRequest && state.serviceRequest.status === 'accepted') {
         startActiveService({
@@ -786,15 +859,18 @@ const firebaseConfig = {
     if (!USERS[code]) return;
     currentUser = USERS[code];
     localStorage.setItem('palme_dor_user', code);
-    document.getElementById('error-txt').style.display = 'none';
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('app-screen').classList.remove('hidden');
-    document.getElementById('main-nav-bar').classList.remove('hidden');
+    
+    const errTxt = document.getElementById('error-txt');
+    if (errTxt) errTxt.style.display = 'none';
 
-    // 👉 Affichage automatique du pop-up d'info trafic à la connexion
+    document.getElementById('login-screen')?.classList.add('hidden');
+    document.getElementById('app-screen')?.classList.remove('hidden');
+    document.getElementById('main-nav-bar')?.classList.remove('hidden');
+
     if (state.loginInfo && state.loginInfo.trim() !== "") {
-      document.getElementById('modal-traffic-text').textContent = state.loginInfo;
-      document.getElementById('traffic-modal').classList.remove('hidden');
+      const modalText = document.getElementById('modal-traffic-text');
+      if (modalText) modalText.textContent = state.loginInfo;
+      document.getElementById('traffic-modal')?.classList.remove('hidden');
     }
 
     const savedActive = sessionStorage.getItem('pdo_active_service_' + code);
@@ -803,61 +879,81 @@ const firebaseConfig = {
     }
 
     if (currentUser.role === 'REGULATEUR') {
-      document.getElementById('regulator-view').classList.remove('hidden');
-      document.getElementById('driver-view').classList.add('hidden');
-      document.getElementById('regulator-user-name').textContent = currentUser.name;
+      document.getElementById('regulator-view')?.classList.remove('hidden');
+      document.getElementById('driver-view')?.classList.add('hidden');
+      const regName = document.getElementById('regulator-user-name');
+      if (regName) regName.textContent = currentUser.name;
       
-      selectLigne.value = state.ligneId;
-      selectBus.value = state.bus;
-      document.getElementById('input-prise').value = state.prise;
-      document.getElementById('input-fin').value = state.fin;
-      document.getElementById('input-notes').value = state.notes;
+      if (selectLigne) selectLigne.value = state.ligneId;
+      if (selectBus) selectBus.value = state.bus;
+      
+      const inputPrise = document.getElementById('input-prise');
+      if (inputPrise) inputPrise.value = state.prise;
+      
+      const inputFin = document.getElementById('input-fin');
+      if (inputFin) inputFin.value = state.fin;
+      
+      const inputNotes = document.getElementById('input-notes');
+      if (inputNotes) inputNotes.value = state.notes;
     } else {
-      document.getElementById('driver-view').classList.remove('hidden');
-      document.getElementById('regulator-view').classList.add('hidden');
-      document.getElementById('driver-user-name').textContent = currentUser.name;
+      document.getElementById('driver-view')?.classList.remove('hidden');
+      document.getElementById('regulator-view')?.classList.add('hidden');
+      const drvName = document.getElementById('driver-user-name');
+      if (drvName) drvName.textContent = currentUser.name;
     }
 
     render();
     renderChat();
   }
 
-  document.getElementById('login-btn').addEventListener('click', () => {
-    const matricule = document.getElementById('matricule-input').value.trim();
+  document.getElementById('login-btn')?.addEventListener('click', () => {
+    const matriculeInput = document.getElementById('matricule-input');
+    const matricule = matriculeInput ? matriculeInput.value.trim() : '';
     const loader = document.getElementById('fake-loader-screen');
     const errorTxt = document.getElementById('error-txt');
 
     if (USERS[matricule]) {
-      errorTxt.style.display = 'none';
-      loader.classList.remove('hidden');
+      if (errorTxt) errorTxt.style.display = 'none';
+      loader?.classList.remove('hidden');
       setTimeout(() => {
-        loader.classList.add('hidden');
+        loader?.classList.add('hidden');
         loginUser(matricule);
       }, 800);
-    } else {
+    } else if (errorTxt) {
       errorTxt.style.display = 'block';
     }
   });
 
-  document.getElementById('logout-btn').addEventListener('click', () => {
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.removeItem('palme_dor_user');
     currentUser = null;
-    document.getElementById('app-screen').classList.add('hidden');
-    document.getElementById('main-nav-bar').classList.add('hidden');
-    document.getElementById('login-screen').classList.remove('hidden');
-    document.getElementById('matricule-input').value = '';
+    document.getElementById('app-screen')?.classList.add('hidden');
+    document.getElementById('main-nav-bar')?.classList.add('hidden');
+    document.getElementById('login-screen')?.classList.remove('hidden');
+    const matInput = document.getElementById('matricule-input');
+    if (matInput) matInput.value = '';
   });
 
-  document.getElementById('save-btn').addEventListener('click', () => {
+  document.getElementById('save-btn')?.addEventListener('click', () => {
     if (!currentUser || currentUser.role !== 'REGULATEUR') return;
 
-    state.ligneId = selectLigne.value;
-    state.bus = selectBus.value;
-    state.prise = document.getElementById('input-prise').value;
-    state.fin = document.getElementById('input-fin').value;
-    state.notes = document.getElementById('input-notes').value;
-    state.alerte = document.getElementById('input-alerte').value;
-    state.loginInfo = document.getElementById('input-login-info').value;
+    if (selectLigne) state.ligneId = selectLigne.value;
+    if (selectBus) state.bus = selectBus.value;
+    
+    const pr = document.getElementById('input-prise');
+    if (pr) state.prise = pr.value;
+
+    const fn = document.getElementById('input-fin');
+    if (fn) state.fin = fn.value;
+
+    const nt = document.getElementById('input-notes');
+    if (nt) state.notes = nt.value;
+
+    const al = document.getElementById('input-alerte');
+    if (al) state.alerte = al.value;
+
+    const li = document.getElementById('input-login-info');
+    if (li) state.loginInfo = li.value;
 
     const checkedLines = [];
     document.querySelectorAll('.login-line-chk:checked').forEach(chk => {
@@ -885,9 +981,43 @@ const firebaseConfig = {
     });
   });
 
-  document.getElementById('regulator-start-service-btn').addEventListener('click', () => {
-    const l = document.getElementById('regulator-self-ligne').value.trim() || '1';
-    const b = document.getElementById('regulator-self-bus').value.trim() || '1942';
+  // ==========================================
+  // ENVOI DE LA NOTIFICATION CIBLÉE (V2.2)
+  // ==========================================
+  document.getElementById('regulator-send-notif-btn')?.addEventListener('click', () => {
+    if (!currentUser || currentUser.role !== 'REGULATEUR') return;
+    const notifInput = document.getElementById('regulator-notif-input');
+    const notifText = notifInput ? notifInput.value.trim() : '';
+
+    if (!notifText) {
+      alert("Veuillez saisir un message de notification.");
+      return;
+    }
+
+    const newNotif = {
+      text: notifText,
+      timestamp: Date.now()
+    };
+
+    db.ref('palme_dor_state/driverNotification').set(newNotif).then(() => {
+      const tagRomain = DISCORD_IDS["1942"];
+      
+      envoyerAlerteDiscord(
+        "🔔 Message Régulation",
+        `Conducteur **DESVIGNES Romain** ${tagRomain}, vous avez un message non-lu à consulter sur l'application.`
+      );
+
+      if (notifInput) notifInput.value = '';
+      alert("Notification transmise ! Romain a été notifié sur l'application et Discord.");
+    }).catch(err => {
+      console.error("Erreur Firebase :", err);
+      alert("Erreur lors de l'envoi de la notification.");
+    });
+  });
+
+  document.getElementById('regulator-start-service-btn')?.addEventListener('click', () => {
+    const l = document.getElementById('regulator-self-ligne')?.value.trim() || '1';
+    const b = document.getElementById('regulator-self-bus')?.value.trim() || '1942';
     startActiveService({
       ligne: l,
       bus: `Véhicule ${b}`,
@@ -896,21 +1026,21 @@ const firebaseConfig = {
     alert('Prise de service PCC démarrée !');
   });
 
-  document.getElementById('accept-req-btn').addEventListener('click', () => {
+  document.getElementById('accept-req-btn')?.addEventListener('click', () => {
     if (state.serviceRequest) {
       db.ref('palme_dor_state/serviceRequest/status').set('accepted');
     }
   });
-  document.getElementById('refuse-req-btn').addEventListener('click', () => {
+  document.getElementById('refuse-req-btn')?.addEventListener('click', () => {
     if (state.serviceRequest) {
       db.ref('palme_dor_state/serviceRequest/status').set('refused');
     }
   });
 
-  document.getElementById('submit-service-btn').addEventListener('click', () => {
-    const busNum = document.getElementById('driver-input-bus').value.trim();
-    const ligne = document.getElementById('driver-input-ligne').value.trim();
-    const lieu = document.getElementById('driver-input-lieu').value.trim();
+  document.getElementById('submit-service-btn')?.addEventListener('click', () => {
+    const busNum = document.getElementById('driver-input-bus')?.value.trim();
+    const ligne = document.getElementById('driver-input-ligne')?.value.trim();
+    const lieu = document.getElementById('driver-input-lieu')?.value.trim();
 
     if (!busNum || !ligne || !lieu) {
       alert("Veuillez remplir tous les champs de la demande de service.");
@@ -934,18 +1064,18 @@ const firebaseConfig = {
     });
   });
 
-  document.getElementById('accept-planning-btn').addEventListener('click', () => {
+  document.getElementById('accept-planning-btn')?.addEventListener('click', () => {
     if (state.planningRequest) {
       db.ref('palme_dor_state/planningRequest/status').set('accepted');
     }
   });
-  document.getElementById('refuse-planning-btn').addEventListener('click', () => {
+  document.getElementById('refuse-planning-btn')?.addEventListener('click', () => {
     if (state.planningRequest) {
       db.ref('palme_dor_state/planningRequest/status').set('refused');
     }
   });
 
-  document.getElementById('planning-request-btn').addEventListener('click', () => {
+  document.getElementById('planning-request-btn')?.addEventListener('click', () => {
     const newPlanningReq = {
       status: 'pending',
       timestamp: Date.now()
@@ -963,14 +1093,16 @@ const firebaseConfig = {
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       const splashScreen = document.getElementById('splash-screen');
-      splashScreen.style.opacity = '0';
-      setTimeout(() => {
-        splashScreen.style.display = 'none';
-        
-        const savedMatricule = localStorage.getItem('palme_dor_user');
-        if (savedMatricule && USERS[savedMatricule]) {
-          loginUser(savedMatricule);
-        }
-      }, 500);
+      if (splashScreen) {
+        splashScreen.style.opacity = '0';
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          
+          const savedMatricule = localStorage.getItem('palme_dor_user');
+          if (savedMatricule && USERS[savedMatricule]) {
+            loginUser(savedMatricule);
+          }
+        }, 500);
+      }
     }, 1500);
   });
