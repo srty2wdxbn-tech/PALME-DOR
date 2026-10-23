@@ -20,6 +20,14 @@ async function envoyerAlerteDiscord(titre, message) {
   }
 }
 
+// === TRAPPEUR D'ERREURS VISUEL POUR IPHONE ===
+window.onerror = function(msg, url, line) {
+  alert("Erreur JS : " + msg + " (Ligne " + line + ")");
+};
+window.addEventListener('unhandledrejection', function(event) {
+  alert("Erreur Promesse : " + event.reason);
+});
+
 // Synchronisation Firebase en temps réel sécurisée
 stateRef.on('value', (snapshot) => {
   const data = snapshot.val();
