@@ -20,31 +20,25 @@ async function envoyerAlerteDiscord(titre, message) {
   }
 }
 
-// ==========================================
-// CONFIGURATION FIREBASE & APPLICATION
-// ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyCACzjcG59VuWIGFjM2e0_fipK6hI3CXKY",
-  authDomain: "espace-personnel---pdo.firebaseapp.com",
-  databaseURL: "https://espace-personnel---pdo-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "espace-personnel---pdo",
-  storageBucket: "espace-personnel---pdo.firebasestorage.app",
-  messagingSenderId: "808450248683",
-  appId: "1:808450248683:web:10bf43e54f7796264093ae",
-  measurementId: "G-4WJ4QYEP88"
-};
+// Synchronisation Firebase en temps réel sécurisée
+stateRef.on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    const oldRequest = state.serviceRequest;
+    const oldPlanning = state.planningRequest;
+    const oldNotif = state.driverNotification;
 
-// Initialisation Firebase (Compat)
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const stateRef = db.ref('palme_dor_state');
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('firebase-messaging-sw.js')
-    .then(reg => console.log('Service Worker enregistré:', reg.scope))
-    .catch(err => console.error('Erreur Service Worker:', err));
-}
-
-const notifBanner = document.getElementById('notif-banner');
-if (notifBanner && "Notification" in window && Notification.permission === "default") {
-  notifBanner.classList.remove
+    state = data;
+  } else {
+    // Si la base est vide, on initialise le nœud avec l'état par défaut
+    stateRef.set(state).catch(err => console.error("Erreur d'initialisation Firebase :", err));
+  }
+  
+  // On force l'affichage dans tous les cas pour éviter le blocage
+  render();
+  renderChat();
+}, (error) => {
+  console.error("Erreur de lecture Firebase :", error);
+  // Même en cas d'erreur réseau, on force l'affichage local
+  render();
+});
