@@ -220,7 +220,12 @@ const firebaseConfig = {
     document.getElementById('tab-' + tabId)?.classList.remove('hidden');
 
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    event?.currentTarget?.closest('.nav-item')?.classList.add('active');
+    
+    // Correction ici : Assure que le bouton cliqué (ou l'élément intérieur) reçoit bien la classe active
+    const clickedBtn = event?.currentTarget?.closest('.nav-item') || event?.target?.closest('.nav-item');
+    if (clickedBtn) {
+      clickedBtn.classList.add('active');
+    }
 
     if (tabId === 'history' && currentUser) {
       renderHistory();
