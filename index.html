@@ -235,7 +235,7 @@
       cursor: pointer;
     }
 
-    /* BARRE DE NAVIGATION STYLE "LIQUID GLASS" AVEC ANIMATIONS */
+    /* BARRE DE NAVIGATION STYLE "LIQUID GLASS" AVEC EFFET BULLE IRRISÉE 3D */
     .nav-bar {
       position: fixed;
       bottom: 15px; left: 15px; right: 15px;
@@ -268,50 +268,67 @@
       opacity: 0.8;
       position: relative;
       overflow: hidden;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); /* Effet ressort fluide */
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .nav-item svg { width: 20px; height: 20px; fill: #94a3b8; margin-bottom: 3px; transition: fill 0.3s ease; }
     
-    /* Effet d'enfoncement sous le doigt au clic */
     .nav-item:active {
       transform: scale(0.92);
     }
 
-    /* Bouton actif style "Bulle de verre" avec animation de lueurs fluides */
+    /* BULLE ACTIVE EN RELIEF 3D ET LUEURS IRISÉES */
     .nav-item.active {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(0, 0, 0, 0.25) 100%) !important;
+      backdrop-filter: blur(18px) saturate(200%);
+      -webkit-backdrop-filter: blur(18px) saturate(200%);
+      border: 1.5px solid rgba(255, 255, 255, 0.65);
       color: #38bdf8 !important;
       opacity: 1;
-      transform: scale(1.1); /* Grossit comme une bulle en relief */
+      transform: translateY(-8px) scale(1.18); /* Effet de capsule/bulle bombée en relief */
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.5),
+        inset 0 2px 5px rgba(255, 255, 255, 0.95), /* Reflet lumineux intense sur le haut */
+        inset 0 -8px 14px rgba(0, 0, 0, 0.45),  /* Profondeur bombée sur le bas */
+        0 0 22px rgba(56, 189, 248, 0.6),        /* Halo bleu néon */
+        0 0 35px rgba(239, 68, 68, 0.25),       /* Reflet irisé rouge/arc-en-ciel */
+        0 0 45px rgba(34, 197, 94, 0.25);       /* Reflet irisé vert/arc-en-ciel */
+      z-index: 10;
       animation: liquidGlow 3s ease-in-out infinite alternate;
     }
+    
     .nav-item.active svg { 
       fill: #38bdf8 !important; 
-      filter: drop-shadow(0 2px 4px rgba(56, 189, 248, 0.4));
+      filter: drop-shadow(0 3px 6px rgba(56, 189, 248, 0.7));
+      transform: scale(1.1);
     }
 
-    /* Animation fluide des lueurs changeantes (vert, rouge, bleu, doré) */
     @keyframes liquidGlow {
       0% {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 
-                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
-                    0 0 12px rgba(56, 189, 248, 0.4),
-                    inset 0 -4px 10px rgba(168, 85, 247, 0.3);
+        box-shadow: 
+          0 15px 35px rgba(0, 0, 0, 0.5),
+          inset 0 2px 5px rgba(255, 255, 255, 0.95),
+          inset 0 -8px 14px rgba(0, 0, 0, 0.45),
+          0 0 22px rgba(56, 189, 248, 0.6),
+          0 0 35px rgba(168, 85, 247, 0.3),
+          0 0 45px rgba(34, 197, 94, 0.2);
       }
       50% {
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 
-                    inset 0 1px 4px rgba(255, 255, 255, 0.9),
-                    0 0 18px rgba(34, 197, 94, 0.4), /* Lueur verte fluide */
-                    inset 0 -4px 10px rgba(239, 68, 68, 0.3); /* Reflet rouge */
+        box-shadow: 
+          0 18px 40px rgba(0, 0, 0, 0.55),
+          inset 0 2px 6px rgba(255, 255, 255, 1),
+          inset 0 -8px 14px rgba(0, 0, 0, 0.45),
+          0 0 25px rgba(34, 197, 94, 0.6),
+          0 0 40px rgba(239, 68, 68, 0.35),
+          0 0 50px rgba(56, 189, 248, 0.3);
       }
       100% {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 
-                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
-                    0 0 12px rgba(245, 158, 11, 0.4), /* Lueur dorée */
-                    inset 0 -4px 10px rgba(56, 189, 248, 0.3);
+        box-shadow: 
+          0 15px 35px rgba(0, 0, 0, 0.5),
+          inset 0 2px 5px rgba(255, 255, 255, 0.95),
+          inset 0 -8px 14px rgba(0, 0, 0, 0.45),
+          0 0 22px rgba(245, 158, 11, 0.6),
+          0 0 35px rgba(56, 189, 248, 0.4),
+          0 0 45px rgba(168, 85, 247, 0.3);
       }
     }
 
