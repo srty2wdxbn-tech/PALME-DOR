@@ -235,7 +235,7 @@
       cursor: pointer;
     }
 
-    /* BARRE DE NAVIGATION STYLE "LIQUID GLASS" */
+    /* BARRE DE NAVIGATION STYLE "LIQUID GLASS" AVEC ANIMATIONS */
     .nav-bar {
       position: fixed;
       bottom: 15px; left: 15px; right: 15px;
@@ -266,22 +266,54 @@
       padding: 8px 2px;
       border-radius: 24px !important;
       opacity: 0.8;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); /* Effet ressort fluide */
     }
     .nav-item svg { width: 20px; height: 20px; fill: #94a3b8; margin-bottom: 3px; transition: fill 0.3s ease; }
     
-    /* Bouton actif style "Bulle de verre" bombée en relief */
+    /* Effet d'enfoncement sous le doigt au clic */
+    .nav-item:active {
+      transform: scale(0.92);
+    }
+
+    /* Bouton actif style "Bulle de verre" avec animation de lueurs fluides */
     .nav-item.active {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       color: #38bdf8 !important;
       opacity: 1;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
-      transform: scale(1.05);
+      transform: scale(1.1); /* Grossit comme une bulle en relief */
+      animation: liquidGlow 3s ease-in-out infinite alternate;
     }
-    .nav-item.active svg { fill: #38bdf8 !important; }
+    .nav-item.active svg { 
+      fill: #38bdf8 !important; 
+      filter: drop-shadow(0 2px 4px rgba(56, 189, 248, 0.4));
+    }
+
+    /* Animation fluide des lueurs changeantes (vert, rouge, bleu, doré) */
+    @keyframes liquidGlow {
+      0% {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 0 12px rgba(56, 189, 248, 0.4),
+                    inset 0 -4px 10px rgba(168, 85, 247, 0.3);
+      }
+      50% {
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 
+                    inset 0 1px 4px rgba(255, 255, 255, 0.9),
+                    0 0 18px rgba(34, 197, 94, 0.4), /* Lueur verte fluide */
+                    inset 0 -4px 10px rgba(239, 68, 68, 0.3); /* Reflet rouge */
+      }
+      100% {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 0 12px rgba(245, 158, 11, 0.4), /* Lueur dorée */
+                    inset 0 -4px 10px rgba(56, 189, 248, 0.3);
+      }
+    }
 
     .theme-toggle-btn {
       background: var(--dropdown-bg);
@@ -716,7 +748,7 @@
   <embed id="fullscreen-pdf-view" src="" type="application/pdf" class="fullscreen-pdf" />
 </div>
 
-<!-- BARRE DE NAVIGATION FIXE (LIQUID GLASS) -->
+<!-- BARRE DE NAVIGATION FIXE (LIQUID GLASS + ANIMATIONS) -->
 <div id="main-nav-bar" class="nav-bar hidden">
   <button class="nav-item" onclick="switchTab('chat')">
     <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
