@@ -221,7 +221,6 @@ const firebaseConfig = {
 
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     
-    // Correction ici : Assure que le bouton cliqué (ou l'élément intérieur) reçoit bien la classe active
     const clickedBtn = event?.currentTarget?.closest('.nav-item') || event?.target?.closest('.nav-item');
     if (clickedBtn) {
       clickedBtn.classList.add('active');
@@ -807,13 +806,11 @@ const firebaseConfig = {
     document.getElementById('fullscreenModal')?.classList.add('hidden');
   });
 
-  // Gestion sécurisée des clics globaux avec .closest()
   document.addEventListener('click', (e) => {
     if (e.target.closest('#close-traffic-modal') || e.target.closest('#ok-traffic-modal') || e.target.id === 'traffic-modal') {
       document.getElementById('traffic-modal')?.classList.add('hidden');
     }
 
-    // Gestion du clic sur "Marquer comme lu" par Romain (V2.2)
     if (e.target.closest('#mark-notification-read-btn')) {
       db.ref('palme_dor_state/driverNotification').set(null).then(() => {
         envoyerAlerteDiscord(
@@ -988,9 +985,6 @@ const firebaseConfig = {
     });
   });
 
-  // ==========================================
-  // ENVOI DE LA NOTIFICATION CIBLÉE (V2.2)
-  // ==========================================
   document.getElementById('regulator-send-notif-btn')?.addEventListener('click', () => {
     if (!currentUser || currentUser.role !== 'REGULATEUR') {
       alert("Action réservée au régulateur connecté !");
